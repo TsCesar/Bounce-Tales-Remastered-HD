@@ -74,18 +74,21 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check pillow numpy
-          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 6
+          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
           python - <<'PY'
           import json
           from pathlib import Path
           root=Path('public/remaster/assets/hd')
           m=json.loads((root/'manifest.json').read_text())
-          assert m['version']==3 and m['scale']==6
+          assert m['version']==4 and m['scale']==4
           assert m['spriteCount']==326 and m['originalAtlases']==46
           assert len(m['sprites'])==326 and len(m['pages'])>=1
+          assert sum(m['policyCounts'].values())==326
+          assert all(s['sampling'] in ('pixel','smooth') for s in m['sprites'].values())
           assert all((root/name).is_file() for name in m['pages'])
-          print(f"Validated {len(m['sprites'])} unique HD sprites in {len(m['pages'])} atlas pages")
+          print(f"Validated {len(m['sprites'])} clean sprites in {len(m['pages'])} pages")
           PY
+          python tools/validate_hd_textures.py --output public/remaster/assets/hd
       - name: Generar los cuatro fondos cinematograficos HD
         shell: bash
         run: |

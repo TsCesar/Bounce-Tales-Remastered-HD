@@ -1,170 +1,131 @@
 #!/usr/bin/env python3
-"""Build every verified V62 source sprite as a sharp 6x remastered texture.
+"""Clean, category-aware restoration of all 326 verified Bounce Tales sprites.
 
-Non-destructive, deterministic: reads the 46 original PNG resources and the
-326-record sprite catalogue, exports independently resampled/treated sprites
-into padded 2048px pages plus a new UV manifest. Source resources unchanged.
+This deliberately does not hallucinate new image detail: the source is 240x320
+J2ME art. It avoids the old grain, aggressive sharpening, contrast shifts and
+semi-transparent fringe artifacts. Original files and collision geometry remain
+untouched. Run again for deterministic atlases and metadata.
 """
 from __future__ import annotations
 
 import argparse
 import json
-import math
-import os
 from pathlib import Path
+from PIL import Image
 
-import numpy as np
-from PIL import Image, ImageEnhance, ImageFilter
-
-PAGE = 2048
+PAGE_SIZE = 2048
 PADDING = 8
+MANIFEST_VERSION = 4
 
 
-def sprite_material(src: Image.Image, scale: int, sprite_id: int) -> Image.Image:
-    """Alpha-premultiplied Lanczos + local material grain + micro-contrast.
+def sampling_for(crop: dict) -> str:
+    """Small game/UI icons require discrete edges; larger scenery can be smooth."""
+    width, height = int(crop["width"]), int(crop["height"])
+    if min(width, height) <= 32 or width * height <= 1200:
+        return "pixel"
+    return "smooth"
 
-    This sharpens existing art and adds texture detail; it is not a claim that
-    a 240x320 original contains new photorealistic information.
-    """
-    rgba = np.asarray(src.convert("RGBA"), dtype=np.float32)
-    alpha = rgba[..., 3] / 255.0
-    premult = np.uint8(np.clip(rgba[..., :3] * alpha[..., None], 0, 255))
-    target = (src.width * scale, src.height * scale)
-    rgb_scaled = np.asarray(
-        Image.fromarray(premult, mode="RGB").resize(target, Image.Resampling.LANCZOS),
-        dtype=np.float32,
+
+def restore_sprite(image: Image.Image, scale: int, sampling: str) -> Image.Image:
+    if sampling not in ("pixel", "smooth"):
+        raise ValueError("Unknown sampling policy")
+    # Pillow's RGBA Lanczos internally resamples premultiplied alpha.
+    # Crucially: no synthetic grain, noise, unsharp mask or colour changes.
+    resampling = Image.Resampling.NEAREST if sampling == "pixel" else Image.Resampling.LANCZOS
+    return image.convert("RGBA").resize(
+        (image.width * scale, image.height * scale), resampling
     )
-    alpha_scaled = np.asarray(
-        Image.fromarray(np.uint8(rgba[..., 3]), mode="L").resize(target, Image.Resampling.LANCZOS),
-        dtype=np.float32,
-    )
-    unpremult = np.clip(
-        rgb_scaled * 255.0 / np.maximum(alpha_scaled[..., None], 3.0),
-        0.0,
-        255.0,
-    )
-    h, w = unpremult.shape[:2]
-    if min(src.size) >= 5:
-        rng = np.random.default_rng(9012 + sprite_id)
-        # Material variation is seeded and smooth; not per-frame TV static.
-        coarse = Image.fromarray(
-            rng.integers(0, 256, size=(max(3, h // 30), max(3, w // 30)), dtype=np.uint8),
-            mode="L",
-        ).resize((w, h), Image.Resampling.BICUBIC)
-        fine = Image.fromarray(
-            rng.integers(0, 256, size=(max(4, h // 6), max(4, w // 6)), dtype=np.uint8),
-            mode="L",
-        ).resize((w, h), Image.Resampling.BILINEAR)
-        coarse_n = (np.asarray(coarse, dtype=np.float32) - 127.5) / 127.5
-        fine_n = (np.asarray(fine, dtype=np.float32) - 127.5) / 127.5
-        # Normal-like directional relief from stable texture detail.
-        gy, gx = np.gradient(coarse_n)
-        relief = np.clip((-0.65 * gx - 0.55 * gy) * 0.35, -0.17, 0.17)
-        variation = 3.8 * coarse_n + 2.6 * fine_n + 16.0 * relief
-        unpremult = np.clip(unpremult * 1.035 + variation[..., None], 0, 255)
-    result = Image.fromarray(
-        np.dstack([np.uint8(unpremult), np.uint8(alpha_scaled)]), mode="RGBA"
-    )
-    # UnsharpMask on RGB only: preserve exact transparent silhouettes.
-    original_alpha = result.getchannel("A")
-    rgb = ImageEnhance.Contrast(result.convert("RGB")).enhance(1.068)
-    rgb = ImageEnhance.Color(rgb).enhance(1.055)
-    rgb = rgb.filter(ImageFilter.UnsharpMask(radius=1.05, percent=125, threshold=2))
-    rgb.putalpha(original_alpha)
-    return rgb
 
 
-class AtlasPage:
-    def __init__(self) -> None:
-        self.image = Image.new("RGBA", (PAGE, PAGE), (0, 0, 0, 0))
-        self.x = PADDING
-        self.y = PADDING
-        self.shelf_height = 0
-        self.used_height = 0
+class Atlas:
+    def __init__(self):
+        self.image = Image.new("RGBA", (PAGE_SIZE, PAGE_SIZE), (0, 0, 0, 0))
+        self.next_x = PADDING
+        self.next_y = PADDING
+        self.row_height = 0
 
-    def place(self, im: Image.Image):
-        w, h = im.size
-        if w + PADDING * 2 > PAGE or h + PADDING * 2 > PAGE:
-            raise ValueError(f"Sprite too large for {PAGE}px atlas: {w}x{h}")
-        if self.x + w + PADDING > PAGE:
-            self.x = PADDING
-            self.y += self.shelf_height + PADDING
-            self.shelf_height = 0
-        if self.y + h + PADDING > PAGE:
+    def put(self, image: Image.Image):
+        width, height = image.size
+        if width + 2 * PADDING > PAGE_SIZE or height + 2 * PADDING > PAGE_SIZE:
+            raise ValueError(f"Sprite too large for atlas: {width}x{height}")
+        if self.next_x + width + PADDING > PAGE_SIZE:
+            self.next_x = PADDING
+            self.next_y += self.row_height + PADDING
+            self.row_height = 0
+        if self.next_y + height + PADDING > PAGE_SIZE:
             return None
-        x, y = self.x, self.y
-        self.image.paste(im, (x, y))
-        self.x += w + PADDING
-        self.shelf_height = max(self.shelf_height, h)
-        self.used_height = max(self.used_height, y + h + PADDING)
-        return x, y
+        xy = (self.next_x, self.next_y)
+        self.image.paste(image, xy)
+        self.next_x += width + PADDING
+        self.row_height = max(self.row_height, height)
+        return xy
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--catalogue", default="src/sprite-atlas.json")
     parser.add_argument("--source", default="assets/original")
     parser.add_argument("--output", default="remaster/assets/hd")
-    parser.add_argument("--scale", type=int, default=6, choices=[4, 5, 6])
+    parser.add_argument("--scale", type=int, default=4, choices=[4])
     args = parser.parse_args()
 
     catalogue = json.loads(Path(args.catalogue).read_text(encoding="utf-8"))
     assert catalogue["static_sprite_count"] == 326
-    assert len(catalogue["png_images"]) == 46
     assert len(catalogue["sprites"]) == 326
+    assert len(catalogue["png_images"]) == 46
+    original = {}
+    for item in catalogue["png_images"]:
+        file = Path(args.source) / item["png"]
+        with Image.open(file) as png:
+            assert png.size == (item["width"], item["height"]), f"Invalid original PNG: {file}"
+            original[item["image_slot"]] = png.convert("RGBA")
 
-    out = Path(args.output)
-    out.mkdir(parents=True, exist_ok=True)
-    images: dict[int, Image.Image] = {}
-    for entry in catalogue["png_images"]:
-        slot = entry["image_slot"]
-        file = Path(args.source, entry["png"])
-        assert file.exists(), f"Missing source PNG {file}"
-        im = Image.open(file).convert("RGBA")
-        assert im.size == (entry["width"], entry["height"]), str(file)
-        images[slot] = im
-
-    pages = [AtlasPage()]
-    manifest = {}
-    # Taller sprites first reduce wasted shelf space, preserving stable ordering.
-    sorted_sprites = sorted(
-        catalogue["sprites"],
-        key=lambda s: (-s["crop"]["height"], -s["crop"]["width"], s["sprite_id"]),
-    )
-    for sprite in sorted_sprites:
-        sid = int(sprite["sprite_id"])
-        crop = sprite["crop"]
-        original = images[sprite["image_slot"]].crop(
-            (crop["x"], crop["y"], crop["x"]+crop["width"], crop["y"]+crop["height"])
-        )
-        enhanced = sprite_material(original, args.scale, sid)
-        placement = pages[-1].place(enhanced)
-        if placement is None:
-            pages.append(AtlasPage())
-            placement = pages[-1].place(enhanced)
-        if placement is None:
-            raise RuntimeError(f"Sprite {sid} cannot fit into new atlas page")
-        x, y = placement
-        manifest[str(sid)] = {
-            "page": len(pages) - 1,
-            "x": x, "y": y,
+    pages = [Atlas()]
+    manifest_sprites = {}
+    policy_counts = {"pixel": 0, "smooth": 0}
+    ordered = sorted(catalogue["sprites"], key=lambda s: (
+        -s["crop"]["height"], -s["crop"]["width"], s["sprite_id"]))
+    for entry in ordered:
+        sid = entry["sprite_id"]
+        if str(sid) in manifest_sprites:
+            raise ValueError(f"Duplicate sprite {sid}")
+        rect = entry["crop"]
+        area = (rect["x"], rect["y"], rect["x"] + rect["width"], rect["y"] + rect["height"])
+        src = original[entry["image_slot"]].crop(area)
+        policy = sampling_for(rect)
+        enhanced = restore_sprite(src, args.scale, policy)
+        location = pages[-1].put(enhanced)
+        if location is None:
+            pages.append(Atlas())
+            location = pages[-1].put(enhanced)
+        assert location is not None
+        policy_counts[policy] += 1
+        manifest_sprites[str(sid)] = {
+            "page": len(pages) - 1, "x": location[0], "y": location[1],
             "w": enhanced.width, "h": enhanced.height,
-            "logicalW": crop["width"], "logicalH": crop["height"],
-            "originX": sprite["draw_offset"]["x"],
-            "originY": sprite["draw_offset"]["y"],
+            "logicalW": rect["width"], "logicalH": rect["height"],
+            "originX": entry["draw_offset"]["x"],
+            "originY": entry["draw_offset"]["y"],
+            "sampling": policy,
         }
-    assert len(manifest) == 326
-    files = []
-    for idx, page in enumerate(pages):
-        filename = f"hd-{idx:02d}.png"
-        # Keep atlas pages fixed at 2048 to simplify GPU texture recycling.
-        page.image.save(out / filename, format="PNG", compress_level=6, optimize=True)
-        files.append(filename)
-        print(f"Atlas {filename}: {PAGE}x{PAGE}, {os.path.getsize(out / filename) / 1024:.0f} KiB", flush=True)
-    result = {"version": 3, "scale": args.scale, "spriteCount": 326,
-              "originalAtlases": 46, "pages": files, "sprites": manifest}
-    (out / "manifest.json").write_text(json.dumps(result, separators=(",", ":")), encoding="utf-8")
-    print(f"Generated {len(manifest)} unique HD sprites across {len(pages)} atlas pages.", flush=True)
+
+    assert len(manifest_sprites) == 326
+    output = Path(args.output)
+    output.mkdir(parents=True, exist_ok=True)
+    pages_list = []
+    for i, page in enumerate(pages):
+        name = f"hd-{i:02d}.png"
+        page.image.save(output / name, optimize=True, compress_level=6)
+        pages_list.append(name)
+        print(f"Clean atlas: {name} ({(output/name).stat().st_size//1024} KiB)", flush=True)
+    result = {
+        "version": MANIFEST_VERSION, "scale": args.scale,
+        "spriteCount": 326, "originalAtlases": 46,
+        "policyCounts": policy_counts,
+        "pages": pages_list, "sprites": manifest_sprites,
+    }
+    (output / "manifest.json").write_text(json.dumps(result, separators=(",", ":")), encoding="utf-8")
+    print(f"Validated {len(manifest_sprites)} restored sprites: {policy_counts}; {len(pages)} pages.", flush=True)
 
 
 if __name__ == "__main__":

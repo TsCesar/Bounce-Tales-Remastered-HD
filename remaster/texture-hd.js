@@ -1,70 +1,65 @@
-/* Bounce Tales UHD texture system v3.
- * Replaces all 326 static sprite textures with independently enhanced 6x
- * atlas sprites when available. Unsupported/failed assets fall back safely.
+/* Clean per-sprite HD atlas rendering. Original sprites remain available
+ * immediately and as a safe fallback; only verified IDs are substituted.
  */
 (function () {
   'use strict';
-  const remaster = window.BounceRemaster;
-  if (!remaster) {
-    console.warn('HD textures: remaster render pipeline unavailable');
-    return;
-  }
-  let manifest = null;
-  let pages = [];
-  let loadedPages = 0;
-  let state = 'loading';
+  const remaster=window.BounceRemaster;
+  if(!remaster)return;
+  const VERSION=4;
+  let manifest=null,pages=[],loaded=0,state='loading';
 
-  remaster.textureStatus = () => ({
-    state, loadedPages, totalPages: pages.length,
-    spriteCount: manifest?.spriteCount || 0,
-    atlasScale: manifest?.scale || 0
+  remaster.textureStatus=()=>({
+    state,loadedPages:loaded,totalPages:pages.length,
+    spriteCount:manifest?.spriteCount||0,atlasScale:manifest?.scale||0
   });
 
-  remaster.drawSprite = function (spriteId, x, y, ctx) {
-    if (remaster.quality === 'classic' || !manifest || !ctx ||
-        !Number.isInteger(spriteId) || spriteId < 0 || spriteId > 325) return false;
-    const sprite = manifest.sprites[String(spriteId)];
-    if (!sprite) return false;
-    const image = pages[sprite.page];
-    if (!image || !image.complete || !image.naturalWidth) return false;
+  remaster.drawSprite=(spriteId,x,y,ctx)=>{
+    if(remaster.quality==='classic'||!manifest||!ctx||
+       !Number.isInteger(spriteId)||spriteId<0||spriteId>325)return false;
+    const sprite=manifest.sprites[String(spriteId)];
+    if(!sprite)return false;
+    const image=pages[sprite.page];
+    if(!image||!image.complete||!image.naturalWidth)return false;
+    // Small UI/characters use nearest neighbour; large scenery uses carefully
+    // alpha-aware precomputed interpolation. No global blur on the game canvas.
     ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(image, sprite.x, sprite.y, sprite.w, sprite.h,
-      Math.round(x - sprite.originX), Math.round(y - sprite.originY),
-      sprite.logicalW, sprite.logicalH);
+    ctx.imageSmoothingEnabled=sprite.sampling==='smooth';
+    if(sprite.sampling==='smooth')ctx.imageSmoothingQuality='high';
+    ctx.drawImage(image,sprite.x,sprite.y,sprite.w,sprite.h,
+      Math.round(x-sprite.originX),Math.round(y-sprite.originY),
+      sprite.logicalW,sprite.logicalH);
     ctx.restore();
     return true;
   };
 
-  async function loadAtlas() {
-    try {
-      const response = await fetch('remaster/assets/hd/manifest.json?v=3', { cache: 'no-store' });
-      if (!response.ok) throw Error('HD manifest HTTP ' + response.status);
-      const loaded = await response.json();
-      if (loaded.version !== 3 || loaded.spriteCount !== 326 ||
-          !Array.isArray(loaded.pages) || !loaded.pages.length ||
-          Object.keys(loaded.sprites || {}).length !== 326 ||
-          loaded.scale !== 6) throw Error('Incompatible HD texture atlas manifest');
-      manifest = loaded;
-      pages = loaded.pages.map((file, index) => {
-        const image = new Image();
-        image.decoding = 'async';
-        image.onload = () => {
-          loadedPages++;
-          if (loadedPages === pages.length) state = 'ready';
+  async function load(){
+    try{
+      const response=await fetch('remaster/assets/hd/manifest.json?v=4',{cache:'no-store'});
+      if(!response.ok)throw new Error('Manifest HTTP '+response.status);
+      const next=await response.json();
+      if(next.version!==VERSION||next.spriteCount!==326||next.scale!==4||
+         !Array.isArray(next.pages)||!next.pages.length||
+         Object.keys(next.sprites||{}).length!==326)throw Error('Invalid HD sprite manifest');
+      for(const value of Object.values(next.sprites))
+        if(!['pixel','smooth'].includes(value.sampling)||
+            !Number.isInteger(value.page)||value.page<0||value.page>=next.pages.length)
+          throw Error('Invalid HD sprite sampling/page');
+      manifest=next;
+      pages=next.pages.map((filename)=>{
+        const image=new Image();
+        image.decoding='async';
+        image.onload=()=>{
+          loaded++;
+          if(loaded===pages.length)state='ready';
         };
-        image.onerror = () => console.warn('HD atlas page failed; native sprite fallback:', file);
-        image.src = 'remaster/assets/hd/' + encodeURIComponent(file) + '?v=3';
+        image.onerror=()=>{state='partial';console.warn('Using original sprite for missing atlas:',filename);};
+        image.src='remaster/assets/hd/'+encodeURIComponent(filename)+'?v=4';
         return image;
       });
-    } catch (error) {
-      state = 'fallback';
-      console.warn('HD texture atlas not available; original sprites retained:', error);
+    }catch(error){
+      state='fallback';
+      console.warn('HD textures unavailable, original sprites will render:',error);
     }
   }
-
-  // Asynchronous, non-blocking: gameplay is playable immediately in the original
-  // crisp mode while the larger textures are requested.
-  loadAtlas();
+  load();
 })();

@@ -47,17 +47,17 @@
     const rect = canvas.getBoundingClientRect();
     const cssW = rect.width || WORLD_W, cssH = rect.height || WORLD_H;
     const deviceDpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-    const scale = quality === 'ultra' ? 1 : 0.72;
-    // A 2160p monitor uses an approximately 1620×2160 3:4 canvas.
-    const targetW = Math.min(MAX_PIXELS, Math.max(WORLD_W, Math.round(cssW * deviceDpr * scale)));
-    const targetH = Math.min(MAX_PIXELS, Math.max(WORLD_H, Math.round(cssH * deviceDpr * scale)));
+    // Both visual modes render at the device's full pixel density, not a
+    // 72%-resolution bitmap stretched by CSS (the previous cause of blur).
+    const targetW = Math.min(MAX_PIXELS, Math.max(WORLD_W, Math.round(cssW * deviceDpr)));
+    const targetH = Math.min(MAX_PIXELS, Math.max(WORLD_H, Math.round(cssH * deviceDpr)));
     if (canvas.width !== targetW || canvas.height !== targetH) {
       canvas.width = targetW;
       canvas.height = targetH;
     }
     ctx.setTransform(canvas.width / WORLD_W, 0, 0, canvas.height / WORLD_H, 0, 0);
-    // Original low-res textures remain pixel-sharp during HD atlas loading.
-    // The texture atlas loader enables high-quality sampling per 4x resource.
+    // Preserve pixel-accurate originals. Individual HD sprites may override
+    // sampling locally; menus and text never inherit a global blur.
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'low';
   }
@@ -80,8 +80,8 @@
     ctx.clip();
     if (p.form === 0) {
       const surface = ctx.createRadialGradient(-r * .38, -r * .46, r * .04, r * .15, r * .20, r * 1.32);
-      surface.addColorStop(0, '#ffe0c9');
-      surface.addColorStop(.12, '#ff7551');
+      surface.addColorStop(0, '#ffbc9d');
+      surface.addColorStop(.12, '#f95547');
       surface.addColorStop(.35, '#ee1c26');
       surface.addColorStop(.7, '#aa101c');
       surface.addColorStop(1, '#28070e');
@@ -96,8 +96,8 @@
       ctx.fillRect(-r, -r, 2*r, 2*r);
     }
     const lustre = ctx.createRadialGradient(-r * .35, -r * .58, 0, -r * .35, -r * .58, r * .62);
-    lustre.addColorStop(0, 'rgba(255,255,255,.77)');
-    lustre.addColorStop(.25, 'rgba(255,255,255,.23)');
+    lustre.addColorStop(0, 'rgba(255,255,255,.39)');
+    lustre.addColorStop(.25, 'rgba(255,255,255,.12)');
     lustre.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = lustre;
     ctx.fillRect(-r, -r, r * 2, r * 2);
@@ -222,9 +222,9 @@
   function finishScene(ctx, level, time) {
     if (quality === 'classic') return;
     ctx.save();
-    const biomes = level <= 4 ? ['rgba(255,244,187,.22)', 'rgba(116,205,255,.04)']
-      : level <= 9 ? ['rgba(166,255,224,.18)','rgba(78,156,176,.04)']
-      : ['rgba(246,190,255,.17)','rgba(92,64,255,.045)'];
+    const biomes = level <= 4 ? ['rgba(255,244,187,.07)', 'rgba(116,205,255,.04)']
+      : level <= 9 ? ['rgba(166,255,224,.065)','rgba(78,156,176,.04)']
+      : ['rgba(246,190,255,.06)','rgba(92,64,255,.045)'];
     ctx.globalCompositeOperation = 'screen';
     const sun = ctx.createRadialGradient(35, 28, 2, 52, 64, 260);
     sun.addColorStop(0, biomes[0]);
@@ -236,7 +236,7 @@
       ctx.globalCompositeOperation = 'source-over';
       const vignette = ctx.createRadialGradient(120, 148, 80, 120, 160, 250);
       vignette.addColorStop(0,'rgba(0,0,0,0)');
-      vignette.addColorStop(1,'rgba(2,7,20,.17)');
+      vignette.addColorStop(1,'rgba(2,7,20,.09)');
       ctx.fillStyle = vignette;
       ctx.fillRect(0,0,WORLD_W,WORLD_H);
     }
