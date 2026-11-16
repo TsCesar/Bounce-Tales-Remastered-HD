@@ -18,7 +18,7 @@ assert.match(page,/remaster\/materials\.js\?v=4/);
 assert.match(game,/BounceRemaster\?\.drawSprite\?\.\(id,x,y,targetCtx\)/);
 assert.match(game,/BounceRemaster\?\.drawScenery\?\.\(/);
 assert.match(game,/BounceRemaster\?\.drawWaterSurface\?\.\(/);
-assert.match(fs.readFileSync('remaster/texture-hd.js','utf8'),/spriteCount !== 326/);
+assert.match(fs.readFileSync('remaster/texture-hd.js','utf8'),/next\.spriteCount!==326/);
 assert.match(fs.readFileSync('remaster/texture-hd.js','utf8'),/next.scale!==4/);
 assert.match(fs.readFileSync('remaster/scenery.js','utf8'),/remaster.drawScenery = drawScenery/);
 assert.match(fs.readFileSync('remaster/materials.js','utf8'),/remaster.drawTerrain = drawTerrain/);
