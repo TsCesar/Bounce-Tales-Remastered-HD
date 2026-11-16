@@ -1,7 +1,7 @@
 /* Static integration checks for the independent presentation layer. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const files = ['index.html','game.js','remaster/remaster.js','remaster/remaster.css','sw.js','.github/workflows/pages.yml'];
+const files = ['index.html','game.js','remaster/remaster.js','remaster/texture-hd.js','remaster/remaster.css','tools/build_hd_textures.py','sw.js','.github/workflows/pages.yml'];
 for (const name of files) assert.ok(fs.existsSync(name),'Missing '+name);
 const page = fs.readFileSync('index.html','utf8');
 const game = fs.readFileSync('game.js','utf8');
@@ -12,6 +12,10 @@ const workflow = fs.readFileSync('.github/workflows/pages.yml','utf8');
 assert.match(page,/canvas id="game" width="240" height="320"/,'Logical canvas must remain 240x320');
 assert.match(page,/remaster\/remaster\.js\?v=1/);
 assert.match(page,/remaster\/remaster\.css\?v=1/);
+assert.match(page,/remaster\/texture-hd\.js\?v=2/);
+assert.match(game,/BounceRemaster\?\.drawSprite\?\.\(id,x,y,targetCtx\)/);
+assert.match(fs.readFileSync('remaster/texture-hd.js','utf8'),/spriteCount !== 326/);
+assert.match(renderer,/ctx\.imageSmoothingEnabled = false/);
 for(const method of ['beginFrame','drawBounce','drawEgg','drawTerrain','finishScene']){
   assert.ok(game.includes('BounceRemaster?.'+method+'?.('),'Missing '+method+' hook');
   assert.ok(renderer.includes('api.'+method+' = '),'Missing implementation for '+method);
@@ -21,6 +25,8 @@ assert.match(stylesheet,/pointer:coarse/);
 assert.match(stylesheet,/game-controls \{display:none !important;/);
 assert.match(sw,/bounce-tales-v62/);
 assert.match(sw,/remaster\/remaster\.js\?v=1/);
+assert.match(sw,/remaster\/assets\/hd\/manifest\.json\?v=2/);
+assert.match(workflow,/tools\/build_hd_textures\.py/);
 assert.match(workflow,/cp -a src assets remaster public\//);
 assert.equal((page.match(/remaster\/remaster\.js/g)||[]).length,1);
 console.log('Remaster integration: 240x320 simulation, 5 visual hooks, static assets and Pages deployment OK');

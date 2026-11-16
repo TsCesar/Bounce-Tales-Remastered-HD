@@ -117,6 +117,9 @@ function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   if(id===208&&targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawEgg?.(ctx,x,y,elapsed))return;
   if(!Number.isInteger(id)||id<0||seen.has(id)||seen.size>=32||!imageMaps?.maps)return;
   seen.add(id);
+  // Enhanced art reuses the exact sprite ID, crop size and original anchor.
+  // Physics and level geometry never depend on this visual-only replacement.
+  if(window.BounceRemaster?.drawSprite?.(id,x,y,targetCtx)){seen.delete(id);return;}
   // IDs 0–325 use the decoded o.java type-2 descriptor table directly.
   // The catalogue was validated against all 326 legacy image-map records at boot.
   const exact=spriteCatalogue?.get(id);

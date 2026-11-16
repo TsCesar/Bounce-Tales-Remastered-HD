@@ -56,8 +56,10 @@
       canvas.height = targetH;
     }
     ctx.setTransform(canvas.width / WORLD_W, 0, 0, canvas.height / WORLD_H, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = quality === 'ultra' ? 'high' : 'medium';
+    // Original low-res textures remain pixel-sharp during HD atlas loading.
+    // The texture atlas loader enables high-quality sampling per 4x resource.
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'low';
   }
   api.beginFrame = beginFrame;
 

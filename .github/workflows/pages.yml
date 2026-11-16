@@ -30,6 +30,8 @@ jobs:
         run: |
           npm run verify
           node --check remaster/remaster.js
+      - name: Comprobar compilacion del generador de texturas
+        run: python3 -m py_compile tools/build_hd_textures.py
       - name: Comprobar archivos de la version web
         shell: bash
         run: |
@@ -59,7 +61,27 @@ jobs:
           cp index.html game.js style.css sw.js manifest.webmanifest .nojekyll public/
           cp favicon.png icon-192.png icon-512.png apple-touch-icon.png bounce-tales-web-preview.png public/
           cp -a src assets remaster public/
-          test -f public/index.html && test -f public/assets/original/aa.png && test -f public/remaster/remaster.js && test -f public/remaster/remaster.css
+          test -f public/index.html && test -f public/assets/original/aa.png && test -f public/remaster/remaster.js && test -f public/remaster/remaster.css && test -f public/remaster/texture-hd.js
+      - name: Instalar Python para el procesado HD
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generar todas las texturas HD del juego
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow numpy
+          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('public/remaster/assets/hd')
+          m=json.loads((root/'manifest.json').read_text())
+          assert m['spriteCount']==326 and m['originalAtlases']==46
+          assert len(m['sprites'])==326 and len(m['pages'])>=1
+          assert all((root/name).is_file() for name in m['pages'])
+          print(f"Validated {len(m['sprites'])} unique HD sprites in {len(m['pages'])} atlas pages")
+          PY
       # Requiere habilitar Settings > Pages > Source: GitHub Actions
       # El GITHUB_TOKEN no tiene permisos para crear el sitio Pages.
       - name: Configurar GitHub Pages
