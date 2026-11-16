@@ -1,0 +1,71 @@
+name: Publicar Bounce Tales en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: bounce-tales-pages
+  cancel-in-progress: false
+
+jobs:
+  validar:
+    name: Comprobar juego completo
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Instalar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Comprobar sintaxis, niveles, fisicas y arranque
+        run: npm run verify
+      - name: Comprobar archivos de la version web
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in index.html game.js style.css sw.js manifest.webmanifest .nojekyll favicon.png icon-192.png icon-512.png apple-touch-icon.png src/rlef-reader.js src/image-map.json src/sprite-atlas.json assets/original/aa.png assets/original/bf assets/audio/title.ogg; do
+            test -f "$path" || { echo "::error::Falta: $path"; exit 1; }
+          done
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.webmanifest','utf8'));if(m.start_url!=='./'||m.scope!=='./')process.exit(1)"
+          echo 'Archivos y rutas relativos verificados.'
+
+  publicar:
+    name: Publicar web jugable
+    needs: validar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Preparar web estatica
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public
+          cp index.html game.js style.css sw.js manifest.webmanifest .nojekyll public/
+          cp favicon.png icon-192.png icon-512.png apple-touch-icon.png bounce-tales-web-preview.png public/
+          cp -a src assets public/
+          test -f public/index.html && test -f public/assets/original/aa.png
+      # Requiere habilitar Settings > Pages > Source: GitHub Actions
+      # El GITHUB_TOKEN no tiene permisos para crear el sitio Pages.
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Subir archivos web
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
