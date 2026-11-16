@@ -1,0 +1,100 @@
+name: Import original and deploy remaster
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "README.md"
+      - "remaster/**"
+      - ".github/workflows/import-publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "bounce-remaster-pages"
+  cancel-in-progress: false
+
+jobs:
+  import-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout your own repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Import pinned original V62 game on first run
+        shell: bash
+        env:
+          ORIGINAL_COMMIT: da1ae5917a15af1c8c395855620873426a60f754
+        run: |
+          set -euo pipefail
+          if [[ -f .upstream-imported ]]; then
+            echo "Original game already imported; keeping local changes."
+            exit 0
+          fi
+          ORIGINAL="$RUNNER_TEMP/BounceTales-original"
+          git clone --depth=1 --branch main https://github.com/PrasannaOne/BounceTales.git "$ORIGINAL"
+          git -C "$ORIGINAL" fetch --depth=1 origin "$ORIGINAL_COMMIT"
+          git -C "$ORIGINAL" checkout --detach "$ORIGINAL_COMMIT"
+          rsync -a --exclude='.git' --exclude='.github' --exclude='README.md' \
+            "$ORIGINAL/" ./
+          python3 - <<'PY'
+          from pathlib import Path
+          page = Path('index.html')
+          html = page.read_text(encoding='utf-8')
+          hd_css = '<link rel="stylesheet" href="remaster/remaster.css?v=1">'
+          hd_js = '<script src="remaster/remaster.js?v=1"></script>'
+          if hd_css not in html:
+              html = html.replace('</head>', hd_css + '\n</head>')
+          if hd_js not in html:
+              html = html.replace('</body>', hd_js + '\n</body>')
+          page.write_text(html, encoding='utf-8')
+          Path('.upstream-imported').write_text(
+              'Original: PrasannaOne/BounceTales\n'
+              'Revision: da1ae5917a15af1c8c395855620873426a60f754\n'
+              'Remaster: TsCesar/Bounce-Tales-Remastered-HD\n',
+              encoding='utf-8'
+          )
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import source-informed V62 game and apply browser HD remaster"
+            git push origin HEAD:main
+          fi
+
+      - name: Validate JavaScript and imported game assets
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f game.js
+          test -f style.css
+          test -f remaster/remaster.css
+          test -f remaster/remaster.js
+          test -d assets/original
+          node --check game.js
+          node --check remaster/remaster.js
+          grep -q 'remaster/remaster.css' index.html
+          grep -q 'remaster/remaster.js' index.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload playable website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
