@@ -1,5 +1,5 @@
-/* Bounce Tales UHD texture system v2.
- * Replaces all 326 static sprite textures with independently enhanced 4x
+/* Bounce Tales UHD texture system v3.
+ * Replaces all 326 static sprite textures with independently enhanced 6x
  * atlas sprites when available. Unsupported/failed assets fall back safely.
  */
 (function () {
@@ -39,13 +39,13 @@
 
   async function loadAtlas() {
     try {
-      const response = await fetch('remaster/assets/hd/manifest.json?v=2', { cache: 'no-store' });
+      const response = await fetch('remaster/assets/hd/manifest.json?v=3', { cache: 'no-store' });
       if (!response.ok) throw Error('HD manifest HTTP ' + response.status);
       const loaded = await response.json();
-      if (loaded.version !== 2 || loaded.spriteCount !== 326 ||
+      if (loaded.version !== 3 || loaded.spriteCount !== 326 ||
           !Array.isArray(loaded.pages) || !loaded.pages.length ||
           Object.keys(loaded.sprites || {}).length !== 326 ||
-          loaded.scale !== 4) throw Error('Incompatible HD texture atlas manifest');
+          loaded.scale !== 6) throw Error('Incompatible HD texture atlas manifest');
       manifest = loaded;
       pages = loaded.pages.map((file, index) => {
         const image = new Image();
@@ -55,7 +55,7 @@
           if (loadedPages === pages.length) state = 'ready';
         };
         image.onerror = () => console.warn('HD atlas page failed; native sprite fallback:', file);
-        image.src = 'remaster/assets/hd/' + encodeURIComponent(file) + '?v=2';
+        image.src = 'remaster/assets/hd/' + encodeURIComponent(file) + '?v=3';
         return image;
       });
     } catch (error) {

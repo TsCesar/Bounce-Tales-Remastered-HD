@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build every verified V62 source sprite as a crisp 4x remastered texture.
+"""Build every verified V62 source sprite as a sharp 6x remastered texture.
 
 Non-destructive, deterministic: reads the 46 original PNG resources and the
 326-record sprite catalogue, exports independently resampled/treated sprites
@@ -17,7 +17,7 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 
 PAGE = 2048
-PADDING = 4
+PADDING = 8
 
 
 def sprite_material(src: Image.Image, scale: int, sprite_id: int) -> Image.Image:
@@ -60,16 +60,16 @@ def sprite_material(src: Image.Image, scale: int, sprite_id: int) -> Image.Image
         # Normal-like directional relief from stable texture detail.
         gy, gx = np.gradient(coarse_n)
         relief = np.clip((-0.65 * gx - 0.55 * gy) * 0.35, -0.17, 0.17)
-        variation = 2.2 * coarse_n + 1.35 * fine_n + 10.0 * relief
-        unpremult = np.clip(unpremult * 1.027 + variation[..., None], 0, 255)
+        variation = 3.8 * coarse_n + 2.6 * fine_n + 16.0 * relief
+        unpremult = np.clip(unpremult * 1.035 + variation[..., None], 0, 255)
     result = Image.fromarray(
         np.dstack([np.uint8(unpremult), np.uint8(alpha_scaled)]), mode="RGBA"
     )
     # UnsharpMask on RGB only: preserve exact transparent silhouettes.
     original_alpha = result.getchannel("A")
-    rgb = ImageEnhance.Contrast(result.convert("RGB")).enhance(1.036)
-    rgb = ImageEnhance.Color(rgb).enhance(1.038)
-    rgb = rgb.filter(ImageFilter.UnsharpMask(radius=1.10, percent=82, threshold=3))
+    rgb = ImageEnhance.Contrast(result.convert("RGB")).enhance(1.068)
+    rgb = ImageEnhance.Color(rgb).enhance(1.055)
+    rgb = rgb.filter(ImageFilter.UnsharpMask(radius=1.05, percent=125, threshold=2))
     rgb.putalpha(original_alpha)
     return rgb
 
@@ -105,7 +105,7 @@ def main() -> None:
     parser.add_argument("--catalogue", default="src/sprite-atlas.json")
     parser.add_argument("--source", default="assets/original")
     parser.add_argument("--output", default="remaster/assets/hd")
-    parser.add_argument("--scale", type=int, default=4, choices=[3, 4])
+    parser.add_argument("--scale", type=int, default=6, choices=[4, 5, 6])
     args = parser.parse_args()
 
     catalogue = json.loads(Path(args.catalogue).read_text(encoding="utf-8"))
@@ -161,7 +161,7 @@ def main() -> None:
         page.image.save(out / filename, format="PNG", compress_level=6, optimize=True)
         files.append(filename)
         print(f"Atlas {filename}: {PAGE}x{PAGE}, {os.path.getsize(out / filename) / 1024:.0f} KiB", flush=True)
-    result = {"version": 2, "scale": args.scale, "spriteCount": 326,
+    result = {"version": 3, "scale": args.scale, "spriteCount": 326,
               "originalAtlases": 46, "pages": files, "sprites": manifest}
     (out / "manifest.json").write_text(json.dumps(result, separators=(",", ":")), encoding="utf-8")
     print(f"Generated {len(manifest)} unique HD sprites across {len(pages)} atlas pages.", flush=True)

@@ -581,6 +581,7 @@ function drawWater(zone){
   }
   ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);ctx.closePath();
   ctx.fillStyle=zone.isAirTunnel?'rgba(8,12,17,.28)':'rgba(17,17,238,.27)';ctx.fill();
+  window.BounceRemaster?.drawWaterSurface?.(ctx,{left:sl,right:screenPoint(right),bottomLeft:bl,bottomRight:br,time:elapsed,airTunnel:zone.isAirTunnel});
   if(!zone.isAirTunnel&&zone.region===0){
     ctx.beginPath();
     for(let i=0;i<=steps;i++){
@@ -782,6 +783,7 @@ function drawOriginalParallax(){
   const bonus=[4,9,14].includes(currentLevel.index);
   const top=bonus?'#b400bd':gradientColors[0],bottom=bonus?'#fd8c13':gradientColors[1];
   const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,top);bg.addColorStop(1,bottom);ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  window.BounceRemaster?.drawScenery?.(ctx,currentLevel.index,elapsed,cameraX,cameraY);
   for(const layer of layerState.layers){
     const group=layer.groupWidth;if(!group)continue;
     const xMotion=((cameraX+33000)*SCALE*layer.moveNum)/layer.moveDen;

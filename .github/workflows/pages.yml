@@ -30,8 +30,11 @@ jobs:
         run: |
           npm run verify
           node --check remaster/remaster.js
+          node --check remaster/scenery.js
+          node --check remaster/materials.js
+          node --check remaster/texture-hd.js
       - name: Comprobar compilacion del generador de texturas
-        run: python3 -m py_compile tools/build_hd_textures.py
+        run: python3 -m py_compile tools/build_hd_textures.py tools/build_hd_scenery.py
       - name: Comprobar archivos de la version web
         shell: bash
         run: |
@@ -71,16 +74,32 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check pillow numpy
-          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
+          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 6
           python - <<'PY'
           import json
           from pathlib import Path
           root=Path('public/remaster/assets/hd')
           m=json.loads((root/'manifest.json').read_text())
+          assert m['version']==3 and m['scale']==6
           assert m['spriteCount']==326 and m['originalAtlases']==46
           assert len(m['sprites'])==326 and len(m['pages'])>=1
           assert all((root/name).is_file() for name in m['pages'])
           print(f"Validated {len(m['sprites'])} unique HD sprites in {len(m['pages'])} atlas pages")
+          PY
+      - name: Generar los cuatro fondos cinematograficos HD
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/build_hd_scenery.py --output public/remaster/assets/scenery
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('public/remaster/assets/scenery')
+          m=json.loads((p/'manifest.json').read_text())
+          assert m['version']==1 and m['width']==1200 and m['height']==1600
+          assert set(m['biomes'])=={'forest','lagoon','twilight','sunset'}
+          assert all((p/f).is_file() and (p/f).stat().st_size>1000 for f in m['biomes'].values())
+          print('Validated all 4 high-resolution cinematic biomes')
           PY
       # Requiere habilitar Settings > Pages > Source: GitHub Actions
       # El GITHUB_TOKEN no tiene permisos para crear el sitio Pages.
