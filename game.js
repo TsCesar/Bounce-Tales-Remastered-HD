@@ -114,6 +114,7 @@ function imgFor(index){
 }
 function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   x=Math.round(x);y=Math.round(y);
+  if(id===208&&targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawEgg?.(ctx,x,y,elapsed))return;
   if(!Number.isInteger(id)||id<0||seen.has(id)||seen.size>=32||!imageMaps?.maps)return;
   seen.add(id);
   // IDs 0–325 use the decoded o.java type-2 descriptor table directly.
@@ -602,6 +603,7 @@ function drawGeometry(poly){
     ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();
   }
   ctx.fill();
+  window.BounceRemaster?.drawTerrain?.(ctx,poly,screenPoint);
 }
 function drawSprite(o,m){
   if(!m)return;
@@ -696,6 +698,7 @@ function drawPlayer(){
   if(body.forme===0)drawBounceForm(p.x,p.y,r);
   else if(body.forme===1)drawBumpyForm(p.x,p.y);
   else drawWollyForm(p.x,p.y,r);
+  window.BounceRemaster?.drawBounce?.(ctx,{x:p.x,y:p.y,r,form:body.forme,rotation:body.rotation,stretch:body.stretchBuffer});
   // The eyes are original image-map animations, drawn after the active form.
   if(body.eyeFrame===1){
     drawImageMap(20,p.x,p.y);
@@ -1104,11 +1107,13 @@ function drawGameplayScene(){
     }else if(item.type==='cannon')drawCannon(item.cannon);
   }
   for(const e of bonusEggs){if(!e.collected){const p=screenPoint(e);drawImageMap(208,p.x,p.y);}}
+  window.BounceRemaster?.finishScene?.(ctx,currentLevel.index,elapsed);
   particles.draw(ctx,screenPoint,SCALE,(id,x,y,frame)=>drawImageMap(id,x,y,new Set(),frame,ctx));if(activeStoryMessage)drawOriginalStoryMessage();else drawFieldMessage();
   if(toastTimer>0){ctx.fillStyle='#06121dcc';ctx.fillRect(34,276,172,22);const target=textCtx||ctx;target.fillStyle='#fff';target.font='600 9px system-ui,sans-serif';target.textAlign='center';target.textBaseline='alphabetic';target.fillText(toastText,120,290);}
   drawOriginalGameplayHud();
 }
 function draw(){
+  window.BounceRemaster?.beginFrame?.(ctx,canvas);
   canvasMenuHits=[];ctx.clearRect(0,0,W,H);if(textCtx)textCtx.clearRect(0,0,W,H);
   if(mode===S.play){drawGameplayScene();return;}
   if(mode===S.pause){drawGameplayScene();drawCanvasPause();return;}
