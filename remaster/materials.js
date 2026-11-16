@@ -62,5 +62,5 @@
       ctx.restore();
     }
   }
-  remaster.drawTerrain=drawTerrain;
+  remaster.drawTerrain = drawTerrain;
 })();
