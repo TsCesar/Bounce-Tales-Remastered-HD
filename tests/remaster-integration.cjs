@@ -19,7 +19,8 @@ for(const method of ['beginFrame','drawBounce','drawEgg','drawTerrain','finishSc
 assert.match(renderer,/const WORLD_W = 240, WORLD_H = 320/);
 assert.match(stylesheet,/pointer:coarse/);
 assert.match(stylesheet,/game-controls \{display:none !important;/);
-assert.match(sw,/bounce-tales-remaster-v1/);
+assert.match(sw,/bounce-tales-v62/);
+assert.match(sw,/remaster\/remaster\.js\?v=1/);
 assert.match(workflow,/cp -a src assets remaster public\//);
 assert.equal((page.match(/remaster\/remaster\.js/g)||[]).length,1);
 console.log('Remaster integration: 240x320 simulation, 5 visual hooks, static assets and Pages deployment OK');
