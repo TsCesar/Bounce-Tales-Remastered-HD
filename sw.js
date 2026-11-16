@@ -7,7 +7,6 @@ const APP_SHELL = [
   "remaster/remaster.css?v=1",
   "remaster/remaster.js?v=1",
   "remaster/texture-hd.js?v=2",
-  "remaster/assets/hd/manifest.json?v=2",
   "manifest.webmanifest",
   "sw.js?v=62",
   "src/image-map.json",
