@@ -1,0 +1,112 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+const root=path.resolve(__dirname,'..');
+const listeners=new Map(),raf=[];const noop=()=>{};const gradient={addColorStop:noop};
+const ctx2d=new Proxy({createLinearGradient:()=>gradient,createRadialGradient:()=>gradient,measureText:()=>({width:0})},{get(t,k){return k in t?t[k]:noop;},set(t,k,v){t[k]=v;return true;}});
+function element(id){const handlers={};return {id,hidden:false,disabled:false,textContent:'',value:'',checked:false,dataset:{},style:{setProperty(key,value,priority){this[key]=value;if(priority)this['priority:'+key]=priority;},removeProperty(key){delete this[key];}},classList:{add:noop,remove:noop,toggle:noop},setAttribute:noop,focus:noop,width:160,height:104,addEventListener(n,f){(handlers[n]??=[]).push(f);},fire(n,event={}){for(const f of handlers[n]||[])f(event);},getContext:()=>ctx2d,getBoundingClientRect:()=>({left:0,top:0,width:id==='game-controls'?320:240,height:id==='game-controls'?320*140/360:320}),closest(selector){return selector.includes('[data-key-id]')&&this.dataset.keyId?this:null;},setPointerCapture:noop,handlers};}
+const ids=['app','game-controls','game-text','settings-game-tab','settings-about-tab','settings-game-pane','settings-about-pane','keyboard-hint','game','level-cover','menu','level-screen','pause-layer','complete-layer','guide-layer','settings-layer','control-editor-layer','control-editor-live-hint','open-control-editor','close-control-editor','cancel-control-editor','save-control-layout','reset-control-layout','control-size','control-size-value','statusline','egg-hud','fps-counter','pause-mini','continue-game','open-chapters','open-guide','level-prev','level-next','level-position','level-name','level-chapter','level-record','level-lock','play-level','back-title','resume','restart','pause-chapters','complete-title','complete-eggs','complete-stats','next-level','result-chapters','guide-back','fps-mode','smooth-motion','show-fps','fullscreen-btn','open-settings','close-settings','share-site','reset-game','game-hint','music-enabled'];
+const els=Object.fromEntries(ids.map(id=>[id,element(id)]));
+els.game.getContext=()=>ctx2d;
+const controls=['left','right','jump','star'].map((name,i)=>{const b=element(name);b.dataset.keyId=String([3,4,7,20][i]);return b;});
+els['game-controls'].querySelectorAll=()=>controls;
+const pickerButtons=Object.fromEntries(['left','right','jump','form'].map(id=>{const b=element('pick-'+id);b.dataset.pickControl=id;return [id,b];}));
+els['control-size'].value='100';
+const records=Array.from({length:15},()=>({eggs:0,clearTime:9999,score:0,globalScore:0}));
+let storageValue=JSON.stringify({version:1,records,selected:0,totalGameTime:0});
+const prefStore=new Map();
+const storage={getItem:k=>k==='bounce-tales-original-save-v1'?storageValue:(prefStore.get(k)??null),setItem:(k,v)=>{if(k==='bounce-tales-original-save-v1')storageValue=v;else prefStore.set(k,String(v));},removeItem:k=>{if(k==='bounce-tales-original-save-v1')storageValue=null;else prefStore.delete(k);}};
+els['settings-game-tab'].dataset.settingsTab='game';els['settings-about-tab'].dataset.settingsTab='about';
+const tabs=[els['settings-game-tab'],els['settings-about-tab']];
+const document={hidden:false,fullscreenElement:null,activeElement:null,documentElement:{requestFullscreen:async()=>{document.fullscreenElement=document.documentElement;}},getElementById:id=>els[id]||element(id),querySelector:selector=>selector.includes('about')?els['settings-about-tab']:els['settings-game-tab'],querySelectorAll:selector=>selector==='[data-settings-tab]'?tabs:selector==='[data-pick-control]'?Object.values(pickerButtons):selector==='[data-key-id]'?controls:[],addEventListener(n,f){(listeners.get('document:'+n)||listeners.set('document:'+n,[]).get('document:'+n)).push(f);}};
+const sandbox={document,window:null,console:{error:e=>{throw e;},warn:noop,log:noop},addEventListener(n,f){(listeners.get(n)||listeners.set(n,[]).get(n)).push(f);},requestAnimationFrame:f=>raf.push(f),CustomEvent:function(type,init){this.type=type;this.detail=init?.detail;},localStorage:storage,navigator:{},confirm:()=>true,prompt:noop,dispatchEvent:noop,TextDecoder,TextEncoder,Image:class{constructor(){this.complete=true;this.naturalWidth=1;this.naturalHeight=1;}set src(v){this._src=v;}},fetch:async url=>{const bytes=fs.readFileSync(path.join(root,url));return {ok:true,json:async()=>JSON.parse(bytes.toString('utf8')),arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)};}};
+sandbox.Element=class Element{};sandbox.window=sandbox;vm.createContext(sandbox);
+for(const file of ['src/control-layout.js','src/fixed-point.js','src/original-input-map.js','src/original-camera.js','src/rlef-reader.js','src/bounce-physics.js','src/terrain-collision.js','src/original-collision.js','src/game-timing.js','src/event-engine.js','src/original-sprite-animation.js','src/original-enemies.js','src/original-water.js','src/original-trampoline.js','src/original-cannon.js','src/midp-graphics.js','src/original-progression.js','src/game-particles.js','src/sprite-atlas.js','src/audio-controller.js','src/original-hud.js','game.js']){
+  let source=fs.readFileSync(path.join(root,file),'utf8');
+  if(file==='game.js')source=source.replace('let atlases=[]',"window.__testGetElapsed=()=>elapsed;window.__testGetMode=()=>mode;window.__testDrawTitle=()=>drawCanvasTitle();window.__testMenuActions=()=>canvasMenuHits.map(hit=>hit.action);window.__testOpenNewGame=()=>handleCanvasMenuAction('newgame');window.__testMarkSaved=()=>{progress.records[0].score=1;};window.__testCloseConfirmation=()=>closeConfirmation();let atlases=[]");
+  vm.runInContext(source,sandbox,{filename:file});
+}
+const wait=()=>new Promise(resolve=>setImmediate(resolve));
+(async()=>{
+  await wait();await wait();
+  assert.match(els.statusline.textContent,/ORIGINAL LEVEL DATA LOADED/);
+  assert.equal(els.menu.hidden,false,'boot should land on the in-game title scene');
+  assert.equal(els['pause-mini'].hidden,true,'pause control is hidden outside gameplay');
+  assert.equal(els['fps-mode'].value,'auto','FPS pacing defaults to Auto');
+  assert.equal(els['smooth-motion'].checked,false,'smooth motion defaults OFF for discrete JAR-style rendering');
+  assert.equal(raf.length,1,'boot should start the animation loop');
+  assert.equal(els['level-select'],undefined,'no external HTML dropdown selector');
+  assert.equal(els.app.dataset.mode,'title','scene chrome starts in title mode');
+  els['open-settings'].fire('click');
+  assert.equal(els['settings-layer'].hidden,false,'options dialog opens');
+  els['smooth-motion'].checked=true;els['smooth-motion'].fire('change');
+  assert.equal(prefStore.get('bounce-smooth-motion'),'true','Smooth Motion ON persists independently');
+  els['fps-mode'].value='120';els['fps-mode'].fire('change');
+  assert.equal(prefStore.get('bounce-fps-mode'),'120','120 FPS display cap preference persists');
+  els['smooth-motion'].checked=false;els['smooth-motion'].fire('change');
+  assert.equal(prefStore.get('bounce-smooth-motion'),'false','Smooth Motion can be returned to discrete mode');
+  els['settings-about-tab'].fire('click');
+  assert.equal(els['settings-game-pane'].hidden,true,'About tab switches without scrolling');
+  assert.equal(els['settings-about-pane'].hidden,false,'About tab is directly displayed');
+  els['close-settings'].fire('click');
+  // Exercise the custom touch-control editor, drag/resize path, local save and reset.
+  els['open-settings'].fire('click');els['open-control-editor'].fire('click');
+  assert.equal(els['control-editor-layer'].hidden,false,'touch control editor opens from Settings');
+  const initialLeft={left:controls[0].style.left,top:controls[0].style.top};
+  els['game-controls'].fire('pointerdown',{target:controls[0],pointerId:7,clientX:20,clientY:20,preventDefault:noop,stopPropagation:noop,stopImmediatePropagation:noop});
+  els['game-controls'].fire('pointermove',{target:controls[0],pointerId:7,clientX:52,clientY:42,preventDefault:noop,stopPropagation:noop});
+  els['game-controls'].fire('pointerup',{pointerId:7,stopPropagation:noop});
+  assert.notEqual(controls[0].style.left,initialLeft.left,'dragging repositions the real left control');
+  assert.notEqual(controls[0].style.top,initialLeft.top,'dragging repositions the real left control vertically');
+  els['control-size'].fire('input',{target:{value:'120'}});
+  els['save-control-layout'].fire('click');
+  const customLayout=JSON.parse(prefStore.get('bounce-control-layout-v1'));
+  assert.equal(customLayout.left.size,120,'selected control size can be changed');
+  assert.ok(customLayout.left.x>0&&customLayout.left.y>0,'dragging changes the selected control position');
+  assert.equal(els['control-editor-layer'].hidden,true,'Save closes the editor');
+  els['open-control-editor'].fire('click');
+  els['reset-control-layout'].fire('click');els['save-control-layout'].fire('click');
+  assert.equal(prefStore.has('bounce-control-layout-v1'),false,'Reset restores the original default control layout');
+  els['close-settings'].fire('click');
+  const key=(name,kind)=>{for(const fn of listeners.get(kind)||[])fn({key:name,target:null,preventDefault:noop,stopPropagation:noop});};
+  let now=1000;
+  const tick=frames=>{for(let i=0;i<frames;i++){const next=raf.shift();assert.equal(typeof next,'function');next(now);now+=1000/60;}};
+  // The HUD timer is driven by the same fixed-step update as physics. It must
+  // advance while playing, freeze while paused, then resume without wall drift.
+  key('Enter','keydown');assert.equal(els.app.dataset.mode,'play','PC Enter starts the adventure');key('Enter','keyup');
+  tick(7);const runningTime=sandbox.__testGetElapsed();
+  assert.ok(runningTime>=0.09&&runningTime<=0.11,'level timer advances by fixed simulation time');
+  key('Escape','keydown');assert.equal(els.app.dataset.mode,'pause','PC Escape opens pause');key('Escape','keyup');
+  const pausedTime=sandbox.__testGetElapsed();tick(6);
+  assert.equal(sandbox.__testGetElapsed(),pausedTime,'level timer freezes while paused');
+  key('Escape','keydown');assert.equal(els.app.dataset.mode,'play','PC Escape resumes from pause');key('Escape','keyup');
+  // A saved game exposes both Continue and New Game without removing other menu routes.
+  sandbox.__testMarkSaved();sandbox.__testDrawTitle();
+  const titleActions=sandbox.__testMenuActions();
+  assert.ok(titleActions.includes('continue')&&titleActions.includes('newgame'),'saved title menu exposes Continue and New Game');
+  sandbox.__testOpenNewGame();
+  assert.equal(sandbox.__testGetMode(),'confirm','New Game opens the in-game confirmation panel');
+  sandbox.__testCloseConfirmation();assert.equal(sandbox.__testGetMode(),'title','cancelling New Game returns to the title screen');
+  els['open-chapters'].fire('click');
+  assert.equal(els['level-screen'].hidden,false,'chapter book opens inside the game viewport');
+  els['level-next'].fire('click');
+  assert.equal(JSON.parse(storageValue).selected,0,'browsing the book must not overwrite Continue progress');
+  els['level-prev'].fire('click');
+  const stageNames=['Misty Morning','Unfriendly Friends','Seeking Answers','Bumpy Cracks','Secret Stalkway','Into the Mines','A Gloomy Path','Rumbling Sounds','Trapped in Machine','Tunnel of Treasures','Wicked Circus','Hunting Colours','Almost There','Final Ride','Fantastic Fair'];
+  for(let i=0;i<stageNames.length;i++){
+    if(i>0)els['level-next'].fire('click');
+    assert.equal(els['level-position'].textContent,String(i+1).padStart(2,'0')+' / 15');
+    assert.match(els['level-name'].textContent,new RegExp(stageNames[i].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')),'chapter title');
+    els['play-level'].fire('click');await wait();await wait();
+    assert.equal(els['pause-mini'].hidden,false,'gameplay pause control visible for '+stageNames[i]);
+    tick(4);
+    els['pause-mini'].fire('click');
+    assert.equal(els['pause-layer'].hidden,false,'pause screen opens in-game');
+    els['pause-chapters'].fire('click');
+    assert.equal(els['level-screen'].hidden,false,'chapter book returns from pause');
+  }
+  assert.ok(raf.length>=1,'game loop keeps scheduling frames');
+  document.hidden=true;for(const fn of listeners.get('document:visibilitychange')||[])fn();
+  console.log('Runtime smoke: original title, control editor drag/resize/save/reset, no external dropdown, all 15 RLEF stages boot/play/pause, FPS defaults and visibility reset passed');
+})().catch(err=>{console.error(err);process.exitCode=1;});

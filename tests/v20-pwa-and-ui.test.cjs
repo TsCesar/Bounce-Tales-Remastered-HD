@@ -1,0 +1,45 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const zlib=require('node:zlib');
+function readPngRGBA(bytes){
+  let offset=8,width=0,height=0,bitDepth=0,colorType=0;const parts=[];
+  while(offset<bytes.length){const len=bytes.readUInt32BE(offset);const type=bytes.toString('ascii',offset+4,offset+8);const data=bytes.subarray(offset+8,offset+8+len);
+    if(type==='IHDR'){width=data.readUInt32BE(0);height=data.readUInt32BE(4);bitDepth=data[8];colorType=data[9];}
+    if(type==='IDAT')parts.push(data);offset+=12+len;if(type==='IEND')break;
+  }
+  assert.equal(bitDepth,8);assert.equal(colorType,6,'PNG should use RGBA pixels');const raw=zlib.inflateSync(Buffer.concat(parts));
+  const bpp=4,stride=width*bpp,out=Buffer.alloc(height*stride);let src=0;
+  for(let y=0;y<height;y++){const filter=raw[src++];for(let x=0;x<stride;x++){const val=raw[src++],a=x>=bpp?out[y*stride+x-bpp]:0,b=y>0?out[(y-1)*stride+x]:0,c=y>0&&x>=bpp?out[(y-1)*stride+x-bpp]:0;let predictor=0;
+      if(filter===1)predictor=a;else if(filter===2)predictor=b;else if(filter===3)predictor=Math.floor((a+b)/2);else if(filter===4){const p=a+b-c,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-c);predictor=pa<=pb&&pa<=pc?a:pb<=pc?b:c;}else assert.equal(filter,0,'valid PNG row filter');out[y*stride+x]=(val+predictor)&255;}}
+  return {width,height,data:out};
+}
+const root=path.join(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const css=fs.readFileSync(path.join(root,'style.css'),'utf8');
+const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8'));
+for(const name of ['icon-192.png','icon-512.png','apple-touch-icon.png','bounce-tales-web-preview.png'])assert.ok(fs.existsSync(path.join(root,name)),name+' exists at ZIP root');
+for(const tag of ['og:title','og:description','og:image','twitter:card','twitter:image'])assert.ok(html.includes(tag),'metadata '+tag);
+assert.match(html,/bounce-tales-web-preview\.png/);assert.match(html,/apple-touch-icon\.png/);
+assert.deepEqual(manifest.icons.map(i=>i.sizes),['192x192','512x512']);
+assert.equal(manifest.icons[0].src,'icon-192.png');assert.equal(manifest.icons[1].src,'icon-512.png');
+assert.match(sw,/bounce-tales-v62/);for(const name of ['icon-192.png','icon-512.png','apple-touch-icon.png'])assert.ok(sw.includes(name),'critical shell includes '+name);assert.doesNotMatch(sw,/bounce-tales-web-preview\.png|assets\/audio\/act1\.ogg/,'large preview/audio are lazy-cached, not first-install prerequisites');
+const logo=readPngRGBA(fs.readFileSync(path.join(root,'assets/logo-transparent.png')));
+let alphaMin=255,alphaMax=0;for(let i=3;i<logo.data.length;i+=4){alphaMin=Math.min(alphaMin,logo.data[i]);alphaMax=Math.max(alphaMax,logo.data[i]);}
+assert.ok(alphaMin===0&&alphaMax===255,'title logo has true transparency and opaque letter artwork');
+assert.equal(logo.data[3],0,'top-left logo matte is transparent');assert.equal(logo.data[(logo.height-1)*logo.width*4+(logo.width-1)*4+3],0,'bottom-right logo matte is transparent');
+// The original source artwork remains untouched for resource-hash parity.
+const sourceLogo=readPngRGBA(fs.readFileSync(path.join(root,'assets/original/j.png')));
+assert.equal(sourceLogo.width,168);assert.equal(sourceLogo.height,121);assert.equal(sourceLogo.data[3],255,'original JAR atlas image is kept byte-faithful and separate');
+const titleStart=html.indexOf('function drawCanvasTitle');
+const game=fs.readFileSync(path.join(root,'game.js'),'utf8');
+const title=game.slice(game.indexOf('function drawCanvasTitle'),game.indexOf('function drawCanvasChapterBook'));
+assert.match(title,/drawOriginalTitleBook\(\)/,'title uses the original book asset composition');
+assert.match(game,/function drawCanvasChapterBook\(\)/,'chapter selection remains available as its own original chapter-book scene');
+assert.match(game.slice(game.indexOf('function drawCanvasOptions'),game.indexOf('function hudDigitWidth')),/SOUND  ON|SOUND  OFF/,'sound control remains available in Options');
+assert.doesNotMatch(game,/index===7\?'assets\/logo-transparent\.png'/,'in-game atlas no longer substitutes the PWA logo');
+assert.match(css,/overflow-y:\s*auto;\s*overscroll-behavior:\s*none/,'the page prevents rubber-band navigation but does not clip content on short viewports');
+assert.match(css,/#app\s*\{[^}]*gap:\s*12px/s,'the stage/control gap is owned by the responsive shell');
+assert.match(css,/\.header-btn\.share-only\s*\{[^}]*width:\s*44px/s);
+console.log('V20 visuals/PWA: alpha title logo, non-overlapping footer controls, root icons, OG metadata, offline cache and mobile spacing verified');

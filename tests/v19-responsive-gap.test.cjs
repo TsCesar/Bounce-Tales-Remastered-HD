@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const css=fs.readFileSync(path.join(__dirname,'..','style.css'),'utf8');
+assert.match(css,/overflow:\s*hidden/);assert.match(css,/overscroll-behavior:\s*none/);
+assert.match(css,/#app\s*\{[^}]*gap:\s*12px/s,'game and touch surface use one explicit responsive gap');
+assert.match(css,/data-key-id=\"20\"/,'the special form control has its own styled key selector');
+assert.match(css,/\.main-controls\{[^}]*gap:clamp\(7px,2\.5vw,12px\)/);
+assert.match(css,/@media\s*\(max-height:\s*620px\) and \(orientation:\s*portrait\)/);
+console.log('Responsive layout: no-scroll viewport, thumb spacing, inter-control gaps and enlarged star control verified');

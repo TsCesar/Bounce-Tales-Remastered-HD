@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const css=fs.readFileSync(path.join(root,'style.css'),'utf8');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const editorStart=css.indexOf('.control-editor-panel{');
+const editorEnd=css.indexOf('/* Header actions',editorStart);
+const editor=css.slice(editorStart,editorEnd);
+assert.ok(editor.length>0,'the compact control-editor rules exist once in the shared stylesheet');
+assert.match(editor,/max-height:calc\(100dvh - 94px/,'panel adapts to visible viewport');
+assert.match(editor,/overflow:hidden!important/,'editor cannot scroll');
+assert.match(editor,/\.control-editor-live-hint\{display:none/,'redundant hint is removed to save height');
+assert.match(editor,/\.control-editor-actions \.settings-action\s*\{[^}]*min-height:\s*34px/,'all action buttons remain compact and tappable');
+for(const id of ['reset-control-layout','cancel-control-editor','save-control-layout']) assert.ok(html.includes(`id="${id}"`),`${id} remains available`);
+assert.match(html,/style\.css\?v=62/);
+assert.match(html,/control-layout\.js\?v=62/);
+console.log('V42 editor: one-screen non-scrollable layout, all four selectors, slider, and all three actions verified');

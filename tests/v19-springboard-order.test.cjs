@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const game=fs.readFileSync(path.join(__dirname,'..','game.js'),'utf8');
+const start=game.indexOf('function update(dt,sourceDeltaMs=');
+assert.ok(start>=0,'main update function exists');
+const chunk=game.slice(start,start+9000);
+const objectUpdate=chunk.indexOf('updateTrampolineAnimations(dt,sourceDeltaMs)');
+const bodyUpdate=chunk.indexOf('body.update(dt,SCALE,sourceDeltaMs)');
+const terrain=chunk.indexOf('resolveTerrain(dt,previousPosition,false)');
+const trampoline=chunk.indexOf('checkTrampolineContacts(previousPosition)');
+const recovery=chunk.indexOf('BounceTerrainCollision.resolveCirclePolygons',trampoline);
+assert.ok(objectUpdate>=0&&bodyUpdate>objectUpdate&&terrain>bodyUpdate&&trampoline>terrain&&recovery>trampoline,'JAR order is object animation, Bounce integration, polygon collision, spring interaction, then remaster-only recovery');
+assert.match(game,/worldToLocalFixed\(m,previousPosition\.x16,previousPosition\.y16\)/,'trampoline path is transformed with the JAR fixed-point inverse matrix');
+assert.match(game,/crossesLaunchLineFixed\(prev,now\)/,'trampoline contact uses the exact JAR finite launch segment');
+assert.match(game,/body\.vy>=0/,'the source world-Y velocity guard is applied before local-space segment testing');
+assert.match(game,/if\(!body\.enabled\)body\.syncFixedPosition\(\)/,'trampoline-controlled position is synchronized when physics is temporarily disabled');
+console.log('Springboard order: object animation, Bounce integration, polygon collision and spring interaction match JAR traversal');

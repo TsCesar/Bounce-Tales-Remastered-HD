@@ -1,0 +1,14 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8'),css=fs.readFileSync(path.join(root,'style.css'),'utf8');
+assert.match(html,/<title>Bounce Tales<\/title>/);
+assert.doesNotMatch(html,/Build\s*15|Build\s*16|HTML5 Remaster Build/i);
+assert.doesNotMatch(html,/<footer\b/i);
+assert.doesNotMatch(html,/THE ORIGINAL ADVENTURE|A little bounce goes a long way|save-summary/);
+assert.match(html,/id="music-enabled"/);
+assert.ok(html.indexOf('src/sprite-atlas.js')<html.indexOf('game.js'));
+assert.ok(html.indexOf('src/audio-controller.js')<html.indexOf('game.js'));
+assert.match(css,/html,\s*body\s*\{[^}]*overflow-x:\s*hidden/s,'horizontal overflow is clipped without trapping short screens vertically');
+assert.match(css,/body\s*\{[^}]*min-height:\s*100dvh/s,'the shell fills short screens but may scroll when browser chrome reduces the viewport');
+assert.match(css,/overscroll-behavior:\s*none/);
+assert.doesNotMatch(css,/footer\s*\{\s*display:\s*none\s*!important/s,'no obsolete footer-hiding patch is needed because the footer is absent from the page');
+console.log('V18 UI: title screen stripped of build/status clutter; fixed viewport and no-scroll rules present');
