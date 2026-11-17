@@ -10,13 +10,22 @@
     const [r,g,b]=rgb(n),bright=(r+g+b)/3;
     const range=Math.max(r,g,b)-Math.min(r,g,b);
     if(range<38&&bright>42){
-      return bright<100?['#718490','#617584']:['#9DADB5','#81959F'];
+      if(bright<84)return ['#536771','#455B65'];
+      if(bright<132)return ['#8598A2','#728994'];
+      return ['#BCC8CD','#9AAEB5'];
     }
     if(g>r*1.05&&g>b*.96){
-      return bright<104?['#5B9A66','#448253']:['#79B979','#5A9B68'];
+      // Retain dark-green trunks / underground zones. The previous remap
+      // painted EVERY green face light sage, flattening full-height walls.
+      if(bright<70)return ['#285D40','#214C37'];
+      if(bright<110)return ['#437955','#366747'];
+      if(bright<156)return ['#68A173','#559266'];
+      return ['#8BC58A','#75B87C'];
     }
     if(r>g*1.07&&r>b*1.22){
-      return bright<104?['#A07958','#866044']:['#CB9F74','#A57E5D'];
+      if(bright<82)return ['#79573E','#68472E'];
+      if(bright<135)return ['#AC7D57','#926A49'];
+      return ['#D0AA7F','#B38B62'];
     }
     // Mechanism colours, danger, etc. remain source palette colours.
     const asHex='#'+(n>>>0).toString(16).padStart(6,'0').slice(-6);
