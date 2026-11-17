@@ -921,7 +921,13 @@ function menuRoundRect(x,y,w,h,r=0){ctx.beginPath();ctx.rect(Math.round(x),Math.
 function drawJ2MEPanel(x,y,w,h,fill='#4b260d',ornaments=true){
   ctx.save();ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);
   ctx.strokeStyle='#d2b477';ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1);
-  if(imageMaps&&ornaments){drawImageMap(89,x+w/2,y+13);drawImageMap(89,x+w/2,y+h-13);}
+  if(imageMaps&&ornaments){
+    // The old wide sprite's opaque backing obscured titles in HD/Ultra.
+    // Keep the original in Classic while vector corner ornaments remain clear.
+    if(!window.BounceRemaster?.drawPanelOrnaments?.(ctx,x,y,w,h)){
+      drawImageMap(89,x+w/2,y+13);drawImageMap(89,x+w/2,y+h-13);
+    }
+  }
   ctx.restore();
 }
 function menuText(text,x,y,size=8,color='#f7eed9',align='center'){
@@ -1144,7 +1150,13 @@ function drawGameplayScene(){
   }
   for(const e of bonusEggs){if(!e.collected){const p=screenPoint(e);drawImageMap(208,p.x,p.y);}}
   window.BounceRemaster?.finishScene?.(ctx,currentLevel.index,elapsed);
-  particles.draw(ctx,screenPoint,SCALE,(id,x,y,frame)=>drawImageMap(id,x,y,new Set(),frame,ctx));if(activeStoryMessage)drawOriginalStoryMessage();else drawFieldMessage();
+  particles.draw(ctx,screenPoint,SCALE,(id,x,y,frame)=>drawImageMap(id,x,y,new Set(),frame,ctx));
+  // A paused/finished/confirming scene is a frozen picture: the active
+  // dialogue must not paint behind a modal menu and obscure its options.
+  if(mode===S.play){
+    if(activeStoryMessage)drawOriginalStoryMessage();
+    else drawFieldMessage();
+  }
   if(toastTimer>0){ctx.fillStyle='#06121dcc';ctx.fillRect(34,276,172,22);const target=textCtx||ctx;target.fillStyle='#fff';target.font='600 9px system-ui,sans-serif';target.textAlign='center';target.textBaseline='alphabetic';target.fillText(toastText,120,290);}
   drawOriginalGameplayHud();
 }
