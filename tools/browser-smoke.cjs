@@ -272,6 +272,13 @@ const scenarios=[
     assert.ok(canvas);
     await page.mouse.click(canvas.x+canvas.width*.5,canvas.y+canvas.height*190/320);
     await page.waitForFunction(()=>document.getElementById('pause-mini')?.hidden===false,null,{timeout:20000});
+    // Clock panel ends at logical x=202; the Pause overlay must be outside it.
+    const hudClear=await page.evaluate(()=>{
+      const stage=document.getElementById('game').getBoundingClientRect();
+      const pause=document.getElementById('pause-mini').getBoundingClientRect();
+      return stage.left+stage.width*202/240<=pause.left+1;
+    });
+    assert.ok(hudClear,c.name+' Pause overlay covers the remade clock');
     await page.waitForTimeout(170);
     await page.screenshot({path:path.join(screenshots,c.name+'-gameplay.png')});
     await page.locator('#pause-mini').click({timeout:10000});
