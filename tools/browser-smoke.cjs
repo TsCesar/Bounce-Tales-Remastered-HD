@@ -92,26 +92,26 @@ const scenarios=[
         for(const name of ['drawRemadeTrampoline','drawRemadeCannon','drawRemadeEnemy','drawRemadeFriend']){
           if(typeof art[name]!=='function')throw Error('Missing V15: '+name);
         }
-        const c=document.createElement('canvas');c.width=1200;c.height=720;
+        const c=document.createElement('canvas');c.width=1500;c.height=720;
         const ctx=c.getContext('2d');ctx.scale(3,3);
-        ctx.fillStyle='#E9F2EC';ctx.fillRect(0,0,400,240);
+        ctx.fillStyle='#E9F2EC';ctx.fillRect(0,0,500,240);
         const labels=[
-          ['FOREST SPRING',70,95],['LAGOON SPRING',200,95],
-          ['TWILIGHT SPRING',330,95],['CANNON',70,205],
-          ['CANDLE',160,205],['BUMPER',235,205],
-          ['MOLE',315,205],['STALKER',380,205]
+          ['FOREST SPRING',80,95],['LAGOON SPRING',245,95],
+          ['TWILIGHT SPRING',410,95],['CANNON',65,205],
+          ['CANDLE',160,205],['BUMPER',250,205],
+          ['MOLE',340,205],['STALKER',445,205]
         ];
         for(const [label,x,y] of labels){
           ctx.fillStyle='#294959';ctx.font='bold 6px system-ui';
           ctx.textAlign='center';ctx.fillText(label,x,y+9);
         }
-        for(const [imageId,x] of [[497,70],[509,200],[490,330]]){
+        for(const [imageId,x] of [[497,80],[509,245],[490,410]]){
           if(!art.drawRemadeTrampoline(ctx,{x,y:77,imageId,frame:2,active:true}))
             throw Error('Unrenderable spring: '+imageId);
         }
-        if(!art.drawRemadeCannon(ctx,{x:70,y:190,angle:.4,active:true,animMs:610}))
+        if(!art.drawRemadeCannon(ctx,{x:65,y:190,angle:.4,active:true,animMs:610}))
           throw Error('Cannon illustration missing');
-        for(const [type,x] of [[0,160],[1,235],[2,315],[3,380]]){
+        for(const [type,x] of [[0,160],[1,250],[2,340],[3,445]]){
           if(!art.drawRemadeEnemy(ctx,{type,x,y:185,time:1.5,state:1,
              propelType:1,molePeekTimer:800,molePeekPeriod:800}))
             throw Error('Enemy illustration missing: '+type);
@@ -120,6 +120,45 @@ const scenarios=[
       });
       fs.writeFileSync(path.join(screenshots,c.name+'-v15-props-and-enemies.png'),
         Buffer.from(preview.split(',')[1],'base64'));
+    }
+    if(!c.mobile){
+      // Catalogue of actual, newly drawn source-sized ground pieces.
+      const sheet=await page.evaluate(async()=>{
+        const art=window.BounceRemaster;
+        if(typeof art.drawRemadeGroundTile!=='function')
+          throw Error('V17 tile renderer unavailable');
+        const maps=(await(await fetch('src/image-map.json')).json()).maps;
+        const canvas=document.createElement('canvas');
+        canvas.width=1350;canvas.height=600;
+        const ctx=canvas.getContext('2d');ctx.scale(3,3);
+        ctx.fillStyle='#EAF1E9';ctx.fillRect(0,0,450,200);
+        const groups=[
+          {ids:[253,254,255,256,257,258,259,260,261,262,263,264,265,266],label:'FOREST'},
+          {ids:[162,163,164,165,166,167,168,169,170,171,172,173,174,175],label:'LAGOON'},
+          {ids:[120,121,122,123,124,125,126],label:'CAVE'}
+        ];
+        let rendered=0;
+        groups.forEach((group,row)=>{
+          ctx.fillStyle='#284655';ctx.font='bold 11px system-ui';
+          ctx.fillText(group.label,10,22+row*65);
+          let x=75;
+          for(const id of group.ids){
+            const meta=maps[String(id)];if(!meta)throw Error('Missing source tile '+id);
+            const px=x+meta.originX;
+            const py=15+row*65+meta.originY;
+            if(!art.drawRemadeGroundTile(ctx,id,px,py,meta))
+              throw Error('Unrenderable tile '+id);
+            rendered++;
+            ctx.font='6px system-ui';ctx.fillStyle='#334B55';
+            ctx.fillText(String(id),x,51+row*65);
+            x+=Math.max(16,meta.width+5);
+          }
+        });
+        if(rendered!==35)throw Error('Wrong V17 tile count '+rendered);
+        return canvas.toDataURL('image/png');
+      });
+      fs.writeFileSync(path.join(screenshots,c.name+'-v17-ground-tiles.png'),
+        Buffer.from(sheet.split(',')[1],'base64'));
     }
     const high=await page.evaluate(()=>({
       game:document.getElementById('game').width*document.getElementById('game').height,
