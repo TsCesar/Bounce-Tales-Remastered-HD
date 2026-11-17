@@ -13,11 +13,12 @@ def main():
     p.add_argument("--catalogue",default="src/sprite-atlas.json")
     p.add_argument("--source",default="assets/original")
     p.add_argument("--output",default="remaster/assets/hd")
+    p.add_argument("--scale",type=int,choices=[2,4],default=4)
     args=p.parse_args()
     root=Path(args.output)
     manifest=json.loads((root/"manifest.json").read_text(encoding="utf-8"))
     source=json.loads(Path(args.catalogue).read_text(encoding="utf-8"))
-    assert manifest["version"]==4 and manifest["scale"]==4
+    assert manifest["version"]==4 and manifest["scale"]==args.scale
     assert manifest["spriteCount"]==326 and len(manifest["sprites"])==326
     atlas=[Image.open(root/name).convert("RGBA") for name in manifest["pages"]]
     originals={
@@ -33,7 +34,7 @@ def main():
         assert sampling in tally
         tally[sampling]+=1
         x,y,w,h=(meta[k] for k in ("x","y","w","h"))
-        assert w==crop["width"]*4 and h==crop["height"]*4
+        assert w==crop["width"]*args.scale and h==crop["height"]*args.scale
         assert meta["originX"]==record["draw_offset"]["x"]
         assert meta["originY"]==record["draw_offset"]["y"]
         page=atlas[meta["page"]]
@@ -46,7 +47,7 @@ def main():
             for sx,sy in ((0,0),(crop["width"]//2,crop["height"]//2),
                           (crop["width"]-1,crop["height"]-1)):
                 a=original.getpixel((ox+sx,oy+sy))
-                b=page.getpixel((x+sx*4+2,y+sy*4+2))
+                b=page.getpixel((x+sx*args.scale+args.scale//2,y+sy*args.scale+args.scale//2))
                 assert a==b,(sid,sx,sy,a,b)
     assert tally==manifest["policyCounts"]
     print(f"Visual assets validated: {tally['pixel']} pixel-sharp; "
