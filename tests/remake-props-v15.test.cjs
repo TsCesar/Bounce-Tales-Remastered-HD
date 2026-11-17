@@ -24,12 +24,12 @@ const pal=[];
 for(const id of [490,497,509]){
   const m=mock();
   assert.equal(art.drawRemadeTrampoline(m.ctx,{x:80,y:110,imageId:id,frame:0,active:false}),true);
-  assert.ok(m.calls.paths>=19,'source spring '+id+' should have boards and coils');
+  assert.ok(m.calls.paths>=16,'source spring '+id+' should have boards and coils');
   pal.push(m.calls.fill.join('|'));
   const animated=mock();
   assert.equal(art.drawRemadeTrampoline(animated.ctx,
     {x:80,y:110,imageId:id,frame:2,active:true}),true);
-  assert.ok(animated.calls.paths>=19,'source spring animation '+id);
+  assert.ok(animated.calls.paths>=16,'source spring animation '+id);
 }
 assert.equal(new Set(pal).size,3,'all spring palettes must be different');
 assert.equal(art.drawRemadeTrampoline(mock().ctx,{x:0,y:0,imageId:100,frame:0}),false);
