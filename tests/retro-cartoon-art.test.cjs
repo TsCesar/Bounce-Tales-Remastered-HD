@@ -18,6 +18,10 @@ assert.match(painter,/forest_tree/);
 assert.match(painter,/crystal/);
 assert.doesNotMatch(painter,/import numpy|ImageFilter|soft_noise|np\.random|np\.gradient/);
 assert.match(scenery,/remaster.drawScenery = drawScenery/);
+assert.match(scenery,/return true;/);
+assert.match(game,/if\(window.BounceRemaster\?\.drawScenery\?\.\(/);
+assert.match(fs.readFileSync('remaster/forms.js','utf8'),/art.drawRemadeForm=drawRemadeForm/);
+assert.match(fs.readFileSync('remaster/world.js','utf8'),/art.drawRemadeTerrain=drawRemadeTerrain/);
 assert.match(scenery,/remaster.drawWaterSurface = drawWaterSurface/);
 assert.match(scenery,/MAX_CACHED_BACKDROPS/);
 assert.match(scenery,/style:'cartoon-retro-hd'/);
@@ -30,9 +34,13 @@ assert.match(ball,/function drawEgg\(ctx,x,y,seconds\)/);
 assert.doesNotMatch(ball,/const vignette\s*=|const bounceShine\s*=|metal\.addColorStop/);
 assert.match(book,/function drawTitleBook\(ctx\)/);
 assert.match(game,/rockBreakRuntime\?\.update\(\{/);
-for(const name of ['remaster/remaster.js','remaster/book.js','remaster/scenery.js','remaster/materials.js']){
+for(const name of ['remaster/remaster.js','remaster/book.js','remaster/materials.js']){
   assert.ok(html.includes(name+'?v=13'),name+' HTML version');
   assert.ok(sw.includes(name+'?v=13'),name+' PWA version');
+}
+for(const name of ['remaster/scenery.js','remaster/forms.js','remaster/world.js']){
+  assert.ok(html.includes(name+'?v=14'),name+' remake HTML version');
+  assert.ok(sw.includes(name+'?v=14'),name+' remake PWA version');
 }
 assert.match(pages,/m\['version'\]==2 and m\['style'\]=='cartoon-retro-hd'/);
 console.log('Retro cartoon V13: four biomes, cel-shaded ground, simple water, matte eggs, ball and book; all gameplay hooks preserved.');

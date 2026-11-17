@@ -128,6 +128,7 @@ function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   x=Math.round(x);y=Math.round(y);
   if(id===208&&targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawEgg?.(ctx,x,y,elapsed))return;
   if(!Number.isInteger(id)||id<0||seen.has(id)||seen.size>=32||!imageMaps?.maps)return;
+  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawRemadeProp?.(ctx,id,x,y))return;
   seen.add(id);
   // Enhanced art reuses the exact sprite ID, crop size and original anchor.
   // Physics and level geometry never depend on this visual-only replacement.
@@ -625,6 +626,7 @@ function drawWater(zone){
   }
 }
 function drawGeometry(poly){
+  if(window.BounceRemaster?.drawRemadeTerrain?.(ctx,poly,screenPoint))return;
   const vs=poly.vertices,faces=poly.faces;
   ctx.fillStyle='#'+poly.color.toString(16).padStart(6,'0');
   ctx.beginPath();
@@ -725,6 +727,12 @@ function drawPlayer(){
   if(body.visible===false)return;
   const renderBody={x:body.prevX+(body.x-body.prevX)*renderAlpha,y:body.prevY+(body.y-body.prevY)*renderAlpha};
   const p=screenPoint(renderBody),r=Math.floor(BouncePhysics.parameters.radius[body.forme]*SCALE)+1;
+  // All three forms use completely new vector artwork in HD/Ultra. Classic
+  // continues through the untouched J2ME art and eye-animation branches.
+  if(window.BounceRemaster?.drawRemadeForm?.(ctx,{
+    form:body.forme,x:p.x,y:p.y,r,rotation:body.rotation,
+    eyeFrame:body.eyeFrame,vx:body.vx,vy:body.vy,grounded:body.grounded
+  }))return;
   if(body.forme===0)drawBounceForm(p.x,p.y,r);
   else if(body.forme===1)drawBumpyForm(p.x,p.y);
   else drawWollyForm(p.x,p.y,r);
@@ -809,7 +817,9 @@ function drawOriginalParallax(){
   const bonus=[4,9,14].includes(currentLevel.index);
   const top=bonus?'#b400bd':gradientColors[0],bottom=bonus?'#fd8c13':gradientColors[1];
   const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,top);bg.addColorStop(1,bottom);ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  window.BounceRemaster?.drawScenery?.(ctx,currentLevel.index,elapsed,cameraX,cameraY);
+  // HD/Ultra: a continuous painted environment replaces the original
+  // repeatedly pasted low-resolution parallax sprites. Classic is identical.
+  if(window.BounceRemaster?.drawScenery?.(ctx,currentLevel.index,elapsed,cameraX,cameraY))return;
   for(const layer of layerState.layers){
     const group=layer.groupWidth;if(!group)continue;
     const xMotion=((cameraX+33000)*SCALE*layer.moveNum)/layer.moveDen;

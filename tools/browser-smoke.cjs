@@ -49,6 +49,41 @@ const scenarios=[
     await page.waitForFunction(()=>document.getElementById('game').width===240);
     await page.evaluate(()=>window.BounceRemaster.setQuality('ultra'));
     await page.waitForTimeout(150);
+    // Render the three new forms and the two destructible rock formations
+    // using the SAME actual canvas renderer as gameplay (not mock drawings).
+    if(!c.mobile){
+      const preview=await page.evaluate(()=>{
+        const api=window.BounceRemaster;
+        if(!api.drawRemadeForm||!api.drawRemadeProp||!api.drawRemadeTerrain)
+          throw Error('Missing V14 vector remake modules');
+        const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=660;
+        const context=canvas.getContext('2d');context.scale(3,3);
+        context.fillStyle='#E6F1E9';context.fillRect(0,0,360,220);
+        const labels=['BOUNCE','BUMPY','WOLLY'];
+        const samples=[];
+        for(let form=0;form<3;form++){
+          const x=65+form*115,y=70;
+          if(!api.drawRemadeForm(context,{form,x,y,r:29,rotation:form*.4,
+             vx:80,vy:12,grounded:false,eyeFrame:0}))
+            throw Error('Failed to render form '+form);
+          context.fillStyle='#203D4A';context.font='bold 8px sans-serif';
+          context.textAlign='center';context.fillText(labels[form],x,112);
+          const image=context.getImageData(x*3,y*3,1,1).data;
+          samples.push([...image]);
+        }
+        if(!api.drawRemadeProp(context,357,121,202)||
+           !api.drawRemadeProp(context,358,288,202))
+           throw Error('Remade rock piles missing');
+        return {image:canvas.toDataURL('image/png'),samples};
+      });
+      assert.ok(preview.samples.every(row=>row[3]===255),'Form centres must be visible');
+      assert.notDeepEqual(preview.samples[0],preview.samples[1],
+        'Bounce and Bumpy must have distinct artwork');
+      assert.notDeepEqual(preview.samples[1],preview.samples[2],
+        'Bumpy and Wolly must have distinct artwork');
+      fs.writeFileSync(path.join(screenshots,c.name+'-three-forms-and-rocks.png'),
+        Buffer.from(preview.image.split(',')[1],'base64'));
+    }
     const high=await page.evaluate(()=>({
       game:document.getElementById('game').width*document.getElementById('game').height,
       text:document.getElementById('game-text').width*document.getElementById('game-text').height
