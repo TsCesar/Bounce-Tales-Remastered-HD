@@ -171,7 +171,7 @@ const scenarios=[
         const ctx=canvas.getContext('2d');ctx.scale(3,3);
         ctx.fillStyle='#EAF0E9';ctx.fillRect(0,0,550,283);
         ctx.fillStyle='#294A54';ctx.font='bold 12px system-ui';
-        ctx.fillText('V19 · ESTRUCTURAS / SEÑALES / HUD / FRAGMENTOS',15,19);
+        ctx.fillText('V19 · ESTRUCTURAS Y SEÑALES',15,19);
         const ids=[130,131,132,176,177,178];
         for(let i=0;i<ids.length;i++){
           const id=ids[i],m=maps[String(id)],x=45+i*86,y=69;
@@ -189,8 +189,10 @@ const scenarios=[
           ctx.fillStyle='#284A55';ctx.font='9px system-ui';
           ctx.fillText('ID '+id,x-16,y+14);
         }
+        ctx.save();ctx.translate(305,0);
         if(!art.drawRemadeHud(ctx,{collected:14,total:28,seconds:153}))
           throw Error('Missing HD HUD');
+        ctx.restore();
         for(let i=0;i<3;i++){
           if(!art.drawRemadeFragment(ctx,[390,396,414][i],230+i*13,259,1))
             throw Error('Missing rock fragment '+i);
@@ -270,6 +272,13 @@ const scenarios=[
     assert.ok(canvas);
     await page.mouse.click(canvas.x+canvas.width*.5,canvas.y+canvas.height*190/320);
     await page.waitForFunction(()=>document.getElementById('pause-mini')?.hidden===false,null,{timeout:20000});
+    // Clock panel ends at logical x=202; the Pause overlay must be outside it.
+    const hudClear=await page.evaluate(()=>{
+      const stage=document.getElementById('game').getBoundingClientRect();
+      const pause=document.getElementById('pause-mini').getBoundingClientRect();
+      return stage.left+stage.width*202/240<=pause.left+1;
+    });
+    assert.ok(hudClear,c.name+' Pause overlay covers the remade clock');
     await page.waitForTimeout(170);
     await page.screenshot({path:path.join(screenshots,c.name+'-gameplay.png')});
     await page.locator('#pause-mini').click({timeout:10000});
