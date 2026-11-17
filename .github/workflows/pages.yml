@@ -93,7 +93,7 @@ jobs:
           # Lightweight 2x sprites for small devices; validate individually.
           python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
           python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
-      - name: Generar los cuatro fondos cinematograficos HD
+      - name: Generar los cuatro fondos retro cartoon HD
         shell: bash
         run: |
           set -euo pipefail
@@ -103,10 +103,10 @@ jobs:
           from pathlib import Path
           p=Path('public/remaster/assets/scenery')
           m=json.loads((p/'manifest.json').read_text())
-          assert m['version']==1 and m['width']==1200 and m['height']==1600
+          assert m['version']==2 and m['style']=='cartoon-retro-hd' and m['width']==1200 and m['height']==1600
           assert set(m['biomes'])=={'forest','lagoon','twilight','sunset'}
           assert all((p/f).is_file() and (p/f).stat().st_size>1000 for f in m['biomes'].values())
-          print('Validated all 4 high-resolution cinematic biomes')
+          print('Validated all 4 hand-painted retro cartoon biomes')
           PY
       # Requiere habilitar Settings > Pages > Source: GitHub Actions
       # El GITHUB_TOKEN no tiene permisos para crear el sitio Pages.
