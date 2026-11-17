@@ -17,7 +17,8 @@ Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remak
 - [x] **Cañones:** redibujados como juguetes metálicos cartoon, con orientación y fogonazo según los estados del motor. No se modifican el lanzamiento ni la puntería.
 - [x] **Enemigos (cuatro tipos):** Candle, bumper, mole y stalker sustituyen el pixelado; desaparecen los cuadrados de error magenta en los modos HD/Ultra. La animación de peeking del topo depende del mismo temporizador que su comportamiento.
 - [x] **NPC aliados:** bola roja ilustrada con rostro y movimiento suave, sin modificar encuentros y diálogos.
-- [ ] **Resto de props y plataformas:** identificar con evidencias cada familia de sprites de puentes, madera y decoración y sustituirla por arte sin uniones visibles, sin inventar IDs.
+- [x] **35 piezas de terreno y plataformas:** bosque 253–266, laguna 162–175 y franjas del tramo final 120–126 redibujados como siluetas vectoriales suavizadas. Se conservan los offsets y tamaños originales; se evita ampliar los píxeles de los atlas antiguos.
+- [ ] **Resto de props y plataformas:** quedan por rehacer maderas, puentes y decoración no pertenecientes a las familias anteriores; necesitan mapeo con referencia real de cada sprite, no IDs inventados.
 - [ ] **Animación fotograma a fotograma adicional:** mejorar gestos específicos de enemigos y props que aún estén representados de forma simplificada.
 - [ ] **Efectos:** transformación, impactos, partículas, fragmentos, agua y daño con formas vectoriales coherentes.
 - [ ] **HUD secundario y detalles de nivel:** sustituir los iconos de baja resolución aún visibles sin rehacer el libro.
@@ -32,4 +33,4 @@ El **modo Clásico** usa exactamente el render original. **HD/Ultra** dibujan nu
 - Verificar todas las ramas y la generación del APK Android y proyecto Xcode.
 - En cada revisión, comparar capturas; un test de integración correcto no sustituye una revisión visual en móvil.
 
-**Limitación actual:** V15 cubre las tres formas, las rocas, los fondos, los muelles, cañones, NPC y cuatro familias de enemigos. Quedan sprites de plataformas, madera y decoración por redibujar. El libro y las formas V14 permanecen sin cambios. Las mecánicas, físicas y niveles son las mismas.
+**Limitación actual:** V17 cubre las tres formas, rocas, fondos, muelles, cañones, NPC, cuatro clases de enemigos y 35 piezas de terreno. Quedan otros sprites de puentes, madera, objetos y decoración por dibujar. El libro y las formas V14 permanecen sin cambios. Mecánicas, físicas y niveles son los originales.
