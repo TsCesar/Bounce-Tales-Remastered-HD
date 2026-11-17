@@ -85,9 +85,9 @@ const game=fs.readFileSync('game.js','utf8');
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 const book=fs.readFileSync('remaster/book.js','utf8');
-for(const name of ['structures','finishing']){
-  assert.ok(html.includes('remaster/'+name+'.js?v=19'));
-  assert.ok(sw.includes('remaster/'+name+'.js?v=19'));
+for(const [name,version] of [['structures',22],['finishing',19]]){
+  assert.ok(html.includes('remaster/'+name+'.js?v='+version));
+  assert.ok(sw.includes('remaster/'+name+'.js?v='+version));
 }
 for(const name of ['drawRemadeStructure','drawRemadeSign','drawRemadeHud','drawRemadeFragment'])
   assert.ok(game.includes('BounceRemaster?.'+name+'?.('),'not wired '+name);

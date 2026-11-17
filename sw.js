@@ -1,17 +1,17 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-two-graphic-modes-v22';
+const CACHE_NAME = 'bounce-tales-v62' + '-original-hd';
 const APP_SHELL = [
   "./",
   "index.html",
   "style.css?v=62",
-  "remaster/remaster.css?v=22",
-  "remaster/remaster.js?v=22",
+  "remaster/remaster.css?v=22-hd",
+  "remaster/remaster.js?v=22-hd",
   "remaster/book.js?v=13",
   "remaster/texture-hd.js?v=22",
-  "remaster/scenery.js?v=22",
+  "remaster/scenery.js?v=22-hd",
   "remaster/materials.js?v=22",
   "remaster/forms.js?v=14",
-  "remaster/world.js?v=18",
+  "remaster/world.js?v=23",
   "remaster/props.js?v=16",
   "remaster/tiles.js?v=17",
   "remaster/decor.js?v=18",
@@ -20,7 +20,7 @@ const APP_SHELL = [
   "remaster/specials.js?v=20",
   "remaster/residual.js?v=21",
   "manifest.webmanifest",
-  "sw.js?v=62",
+  "sw.js?v=62-hd",
   "src/image-map.json",
   "src/sprite-atlas.json",
   "assets/original/lang.xx",
@@ -64,7 +64,7 @@ const APP_SHELL = [
   "src/original-hud.js?v=62",
   "src/module-registry.js?v=62",
   "src/port-engine.js?v=62",
-  "game.js?v=62"
+  "game.js?v=62-hd"
 ];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {

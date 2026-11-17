@@ -76,13 +76,18 @@ function checkScenery(mobile){
   box.run('remaster/scenery.js');
   const api=box.context.BounceRemaster;
   assert.equal(box.images.length,0,'No background should preload on menu');
-  // Our images are still loading; drawing passes must not access ctx yet.
-  api.drawScenery({},0,0,0,0);
+  // While assets load, the canvas receives a simple illustrated fallback.
+  const ctx={
+    save(){},restore(){},createLinearGradient(){return {addColorStop(){}};},
+    fillRect(){},beginPath(){},moveTo(){},bezierCurveTo(){},lineTo(){},
+    closePath(){},fill(){}
+  };
+  api.drawScenery(ctx,0,0,0,0);
   assert.equal(box.images.length,1);
-  api.drawScenery({},5,0,0,0);
-  api.drawScenery({},10,0,0,0);
+  api.drawScenery(ctx,5,0,0,0);
+  api.drawScenery(ctx,10,0,0,0);
   assert.equal(api.sceneryStatus().cachedBackdrops,mobile?1:2);
-  api.drawScenery({},0,0,0,0);
+  api.drawScenery(ctx,0,0,0,0);
   assert.ok(api.sceneryStatus().cachedBackdrops<= (mobile?1:2));
 }
 (async()=>{
