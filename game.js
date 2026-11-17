@@ -128,6 +128,10 @@ function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   x=Math.round(x);y=Math.round(y);
   if(id===208&&targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawEgg?.(ctx,x,y,elapsed))return;
   if(!Number.isInteger(id)||id<0||seen.has(id)||seen.size>=32||!imageMaps?.maps)return;
+  // 35 original ground-tile IDs now use fresh vector silhouettes and colors.
+  // Keep source anchor, rotation matrix, script flags and depth untouched.
+  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
+     window.BounceRemaster?.drawRemadeGroundTile?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
   if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawRemadeProp?.(ctx,id,x,y))return;
   seen.add(id);
   // Enhanced art reuses the exact sprite ID, crop size and original anchor.
