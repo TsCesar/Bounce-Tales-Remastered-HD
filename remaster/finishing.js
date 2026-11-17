@@ -67,25 +67,52 @@
     if(art.quality==='classic'||!fragmentIds.has(id)||!ctx||
        !Number.isFinite(x)||!Number.isFinite(y))return false;
     const state=Math.max(0,Math.min(4,frame|0));
-    const radius=Math.max(1.4,5.1-state*.70);
+    const radius=Math.max(1.7,5.2-state*.64);
     ctx.save();ctx.translate(x,y);
-    // Particle motion and time are still simulated by ParticleSystem.
-    ctx.rotate((id%9)*.24+state*.27);
-    const colors=id===390?['#A0B4BE','#677F8E']:
-      id===414?['#B6C0C4','#7E929A']:['#869AA7','#5A7582'];
-    ctx.beginPath();
-    ctx.moveTo(-radius*.78,radius*.62);
-    ctx.lineTo(-radius*.53,-radius*.65);
-    ctx.lineTo(radius*.15,-radius*.98);
-    ctx.lineTo(radius*.97,-radius*.15);
-    ctx.lineTo(radius*.50,radius*.68);
-    ctx.closePath();ctx.fillStyle=colors[0];ctx.fill();
-    ctx.lineWidth=.75;ctx.strokeStyle='#3B5460';ctx.stroke();
-    ctx.beginPath();ctx.moveTo(-radius*.50,-radius*.56);
-    ctx.lineTo(radius*.13,-radius*.82);
-    ctx.lineTo(radius*.25,-radius*.13);
-    ctx.lineTo(-radius*.18,radius*.08);ctx.closePath();
-    ctx.fillStyle='rgba(237,245,241,.46)';ctx.fill();
+    // Preserve original animation families: 390 star/fire spark -> pale puff;
+    // 396 green/teal spiral -> faded spiral; 414 grey-white dust cloud.
+    // Particle velocity, lifetime and image-frame selection stay unchanged.
+    if(id===390){
+      if(state<=1){
+        const palette=['#FFD844','#F5A32A'];
+        ctx.rotate(state*.22);
+        ctx.beginPath();
+        for(let i=0;i<16;i++){
+          const angle=i*TAU/16-Math.PI/2;
+          const r=radius*(i%2===0?1.35:.55);
+          const px=Math.cos(angle)*r,py=Math.sin(angle)*r;
+          if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);
+        }
+        ctx.closePath();ctx.fillStyle=palette[state];ctx.fill();
+        ctx.lineWidth=.6;ctx.strokeStyle='#A67A29';ctx.stroke();
+      }else{
+        ctx.fillStyle=state===2?'#F7DEAF':'#E8EAE6';
+        for(const [dx,dy,r] of [[-2,-1,.59],[1.4,-2,.64],[-.9,2,.76],[2,1.4,.61]]){
+          ctx.beginPath();ctx.arc(dx,dy,radius*r,0,TAU);ctx.fill();
+        }
+      }
+    }else if(id===396){
+      const palette=['#6BDA85','#67D5BA','#89E4DE','#CDEFE5','#E4EBDA'];
+      ctx.beginPath();ctx.arc(0,0,radius,0,TAU);
+      ctx.fillStyle=palette[state];ctx.fill();
+      ctx.strokeStyle=state<=1?'#257B63':'#79B6AB';
+      ctx.lineWidth=.9;ctx.stroke();
+      ctx.beginPath();
+      for(let i=0;i<=23;i++){
+        const a=i/23*Math.PI*3.8,dist=radius*(.8-i/29);
+        const px=Math.cos(a)*dist,py=Math.sin(a)*dist;
+        if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);
+      }
+      ctx.lineWidth=1.15;ctx.strokeStyle='rgba(35,104,88,.72)';ctx.stroke();
+    }else{
+      const shade=['#F6F6EE','#E8EAE5','#D9DED9','#DDE0DB','#EFF0E8'][state];
+      ctx.fillStyle=shade;
+      for(const [dx,dy,scale] of [[-2,-1,.70],[1.6,-1.5,.70],[-.4,1.7,.90],[2.8,1.1,.51]]){
+        ctx.beginPath();ctx.arc(dx,dy,radius*scale,0,TAU);ctx.fill();
+      }
+      ctx.strokeStyle='rgba(104,118,119,.31)';ctx.lineWidth=.55;
+      ctx.beginPath();ctx.arc(.1,.1,radius*.78,0,TAU);ctx.stroke();
+    }
     ctx.restore();return true;
   }
   art.drawRemadeHud=drawRemadeHud;
