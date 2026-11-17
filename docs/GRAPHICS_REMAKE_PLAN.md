@@ -20,10 +20,13 @@ Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remak
 - [x] **35 piezas de terreno y plataformas:** bosque 253–266, laguna 162–175 y franjas del tramo final 120–126 redibujados como siluetas vectoriales suavizadas. Se conservan los offsets y tamaños originales; se evita ampliar los píxeles de los atlas antiguos.
 - [x] **19 familias decorativas y peligros:** flores, arbustos, hongos, cristales, árboles, calabazas, anillos del tronco y pinchos redibujados con los recortes y anclajes originales.
 - [x] **Pilares altos del bosque:** decorados con bandas simples de corteza dentro de su geometría, sin cambiar la colisión.
-- [ ] **Resto de props:** quedan por rehacer maderas, puentes y decoraciones no pertenecientes a las familias anteriores; necesitan mapeo con referencia real de cada sprite, no IDs inventados.
+- [x] **Piezas estructurales V19:** redibujadas las familias 130–132 (interior de cuevas) y 176–178 (columnas de la laguna), que se repiten cientos de veces entre los niveles originales.
+- [x] **Carteles y señales V19:** tablas de madera 152/243, flechas y advertencias 153/154 y 244–250, conservando dimensiones y posiciones.
+- [ ] **Resto de props:** comprobar uno a uno los elementos de maderas, puentes y decoración aún presentes en el atlas; no sustituir elementos sin correspondencia real con el nivel.
 - [ ] **Animación fotograma a fotograma adicional:** mejorar gestos específicos de enemigos y props que aún estén representados de forma simplificada.
-- [ ] **Efectos:** transformación, impactos, partículas, fragmentos, agua y daño con formas vectoriales coherentes.
-- [ ] **HUD secundario y detalles de nivel:** sustituir los iconos de baja resolución aún visibles sin rehacer el libro.
+- [x] **Efectos V19:** partículas vectoriales de fragmentación de rocas (IDs de fuente 390/396/414); su simulación sigue siendo la original. Los otros efectos ya dibujaban formas en Canvas.
+- [x] **HUD V19:** iconos y contadores de huevos y tiempo redibujados con texto nítido y contraste accesible, sin modificar el libro ni los valores internos.
+- [ ] **Efectos/HUD restantes:** revisión visual de transiciones, checkpoints, avisos y estados concretos en los 15 niveles.
 - [ ] **Prueba visual integral:** recorrido manual de los quince capítulos, capturas de cada bioma y dispositivos físicos Android/iOS.
 
 ## Política de render
@@ -35,4 +38,4 @@ El **modo Clásico** usa exactamente el render original. **HD/Ultra** dibujan nu
 - Verificar todas las ramas y la generación del APK Android y proyecto Xcode.
 - En cada revisión, comparar capturas; un test de integración correcto no sustituye una revisión visual en móvil.
 
-**Limitación actual:** V18 incorpora el remake de 35 piezas de terreno, 19 motivos de decoración y peligros, enemigos, muelles, cañones, NPC, rocas y fondos, además de las tres formas. Siguen pendientes algunos puentes, madera y otros sprites, así como una inspección manual de los 15 capítulos. El libro y las tres formas V14 permanecen intactos.
+**Limitación actual:** V19 amplía V18 con 6 tipos de piezas estructurales, 11 señales/carteles, un HUD nuevo y fragmentos de roca dibujados en Canvas. Aún quedan objetos secundarios de atlas y pruebas manuales de los 15 capítulos. El libro y las tres formas V14 permanecen intactos.
