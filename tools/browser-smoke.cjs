@@ -51,13 +51,13 @@ const scenarios=[
     assert.equal(await page.evaluate(()=>window.BounceRemaster.setQuality('ultra')),false,
       'Ultra is not a selectable graphics mode');
     const qualityButton=page.locator('#remaster-toolbar [data-remaster-mode]');
-    assert.equal((await qualityButton.textContent()).trim(),'HD');
+    assert.equal((await qualityButton.textContent()).trim(),'REMASTERIZADO');
     await qualityButton.click();
-    assert.equal((await qualityButton.textContent()).trim(),'ORIGINAL');
+    assert.equal((await qualityButton.textContent()).trim(),'CLÁSICO');
     assert.equal(await page.evaluate(()=>window.BounceRemaster.quality),'classic');
     await page.waitForFunction(()=>document.getElementById('game').width===240);
     await page.evaluate(()=>window.BounceRemaster.setQuality('remastered'));
-    assert.equal((await qualityButton.textContent()).trim(),'HD');
+    assert.equal((await qualityButton.textContent()).trim(),'REMASTERIZADO');
     await page.waitForTimeout(150);
     // Render the three new forms and the two destructible rock formations
     // using the SAME actual canvas renderer as gameplay (not mock drawings).

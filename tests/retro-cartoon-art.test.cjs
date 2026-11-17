@@ -35,7 +35,7 @@ assert.doesNotMatch(ball,/const vignette\s*=|const bounceShine\s*=|metal\.addCol
 assert.match(book,/function drawTitleBook\(ctx\)/);
 assert.match(game,/rockBreakRuntime\?\.update\(\{/);
 for(const [name,version] of [
-  ['remaster/remaster.js','22-hd'],
+  ['remaster/remaster.js','23-remaster'],
   ['remaster/book.js',13],
   ['remaster/materials.js',22],
   ['remaster/scenery.js','22-hd'],
