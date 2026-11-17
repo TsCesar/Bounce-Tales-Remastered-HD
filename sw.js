@@ -1,14 +1,14 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-original-art-v1';
+const CACHE_NAME = 'bounce-tales-v62' + '-original-art-v2';
 const APP_SHELL = [
   "./",
   "index.html",
   "style.css?v=62",
-  "remaster/remaster.css?v=11",
+  "remaster/remaster.css?v=12",
   "remaster/remaster.js?v=14",
   "remaster/texture-hd.js?v=9",
   "manifest.webmanifest",
-  "sw.js?v=63",
+  "sw.js?v=64",
   "src/image-map.json",
   "src/sprite-atlas.json",
   "assets/original/lang.xx",
@@ -81,21 +81,23 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    // Shell and previously used resources are served immediately on repeat visits.
+    // Check the published page on navigation. Versioned assets use the cache.
+    const navigation = request.mode === 'navigate';
     const cached = await cache.match(request);
-    if (cached) return cached;
+    if (cached && !navigation) return cached;
     try {
-      const response = await fetch(request);
+      const response = await fetch(request, navigation ? { cache: 'no-cache' } : undefined);
       if (response && response.ok && response.type === 'basic') await cache.put(request, response.clone());
       return response;
     } catch (error) {
+      if (cached) return cached;
       const keys = await cache.keys();
       const fallback = keys.find(key => {
         const candidate = new URL(key.url);
         return candidate.origin === url.origin && candidate.pathname === url.pathname;
       });
       if (fallback) return cache.match(fallback);
-      if (request.mode === 'navigate') {
+      if (navigation) {
         const shell = await cache.match(new URL('index.html', self.registration.scope).toString());
         if (shell) return shell;
       }
