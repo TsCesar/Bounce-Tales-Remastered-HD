@@ -24,7 +24,7 @@ assert.match(stylesheet,/top:max\(7px,env\(safe-area-inset-top\)\)/);
 assert.match(stylesheet,/left:50%;transform:translateX\(-50%\)/);
 assert.match(stylesheet,/pointer-events:none/);
 assert.match(stylesheet,/#app \.topbar button,#app \.topbar a \{pointer-events:auto;\}/);
-assert.match(page,/remaster\/texture-hd\.js\?v=24/);
+assert.match(page,/remaster\/texture-hd\.js\?v=22/);
 assert.match(page,/remaster\/scenery\.js\?v=22/);
 assert.match(page,/remaster\/forms\.js\?v=14/);
 assert.match(page,/remaster\/world\.js\?v=23/);
