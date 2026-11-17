@@ -6,24 +6,37 @@
   const remaster = window.BounceRemaster;
   if (!remaster) return;
   const W = 240, H = 320;
-  const biomes = ['forest','lagoon','twilight','sunset'];
+  // Keeping every 1200x1600 background decoded could occupy 30+ MB in a
+  // mobile WebView, even on levels that never use those backgrounds.
   const cache = new Map();
+  const smallDevice = typeof matchMedia==='function' && matchMedia('(pointer: coarse)').matches;
+  const MAX_CACHED_BACKDROPS = smallDevice ? 1 : 2;
 
   function biomeFor(level) {
     return level === 4 || level === 9 || level === 14 ? 'sunset' :
       level < 5 ? 'forest' : level < 10 ? 'lagoon' : 'twilight';
   }
   function getBackdrop(biome) {
-    if (cache.has(biome)) return cache.get(biome);
+    if (cache.has(biome)) {
+      const existing=cache.get(biome);
+      // The Map is maintained in least-recently-used order.
+      cache.delete(biome);cache.set(biome,existing);
+      return existing;
+    }
     const image = new Image();
     image.decoding = 'async';
-    image.src = 'remaster/assets/scenery/' + biome + '.webp?v=1';
     image.onerror = () => console.warn('Backdrop fallback to V62 gradient:', biome);
     cache.set(biome, image);
+    while(cache.size>MAX_CACHED_BACKDROPS){
+      // Release JavaScript references to old decoded backgrounds.
+      cache.delete(cache.keys().next().value);
+    }
+    image.src = 'remaster/assets/scenery/' + biome + '.webp?v=8';
     return image;
   }
-  function prefetch() { for (const b of biomes) getBackdrop(b); }
-  if ('requestIdleCallback' in window) window.requestIdleCallback(prefetch, { timeout: 3500 });
+  // Lazy-load the CURRENT level's background only; no four-image prefetch.
+  remaster.sceneryStatus=()=>({cachedBackdrops:cache.size,
+    limit:MAX_CACHED_BACKDROPS,biomes:[...cache.keys()]});
 
   function drawScenery(ctx, level, time, cameraX, cameraY) {
     if (remaster.quality === 'classic') return;

@@ -51,8 +51,6 @@ jobs:
     needs: validar
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # A dedicated environment prevents legacy main-only github-pages restrictions
-    # from blocking the new web-only release branch.
     environment:
       name: bounce-tales-web
       url: ${{ steps.deployment.outputs.page_url }}
@@ -92,6 +90,9 @@ jobs:
           print(f"Validated {len(m['sprites'])} clean sprites in {len(m['pages'])} pages")
           PY
           python tools/validate_hd_textures.py --output public/remaster/assets/hd
+          # Lightweight 2x sprites for small devices; validate individually.
+          python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
+          python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
       - name: Generar los cuatro fondos cinematograficos HD
         shell: bash
         run: |
