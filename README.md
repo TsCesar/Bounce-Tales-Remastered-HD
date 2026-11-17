@@ -2,8 +2,8 @@
 
 | Rama | Destino | GitHub Actions |
 |---|---|---|
-| [`main`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/main) | Motor, niveles y recursos comunes | Solo calidad |
-| [`web`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/web) | Navegador y PWA | GitHub Pages |
+| [`main`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/main) | Motor, niveles y recursos comunes | Calidad y GitHub Pages automático |
+| [`web`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/web) | Navegador y PWA | GitHub Pages manual |
 | [`android`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/android) | APK / Android Studio | Job Android |
 | [`ios`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/ios) | Xcode / iPhone | Job iOS |
 

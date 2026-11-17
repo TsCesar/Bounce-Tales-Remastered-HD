@@ -2,7 +2,7 @@
 
 Branch: `web`.
 
-Branch for web-specific graphics, desktop layout, browser offline cache and GitHub Pages. Only this branch is allowed to publish the Pages site. No Android or iOS native app build is triggered by web commits.
+Branch for web-specific graphics, desktop layout and browser offline cache. GitHub Pages publishes automatically from `main`. Run the Pages workflow manually to publish from `web`. No Android or iOS native app build is triggered by web commits.
 
 ## Next step
 Improve environment assets and browser UI; keep gameplay mechanics shared via reviewed merges from main.
