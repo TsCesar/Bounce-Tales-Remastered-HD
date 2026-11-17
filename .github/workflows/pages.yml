@@ -51,8 +51,10 @@ jobs:
     needs: validar
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # A dedicated environment prevents legacy main-only github-pages restrictions
+    # from blocking the new web-only release branch.
     environment:
-      name: github-pages
+      name: bounce-tales-web
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Obtener codigo
