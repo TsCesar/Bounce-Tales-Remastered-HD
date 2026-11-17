@@ -47,7 +47,7 @@ assert.ok(cannon.calls.rotate.some(a=>a<0),'cannon must follow aim orientation')
 assert.ok(cannon.calls.paths>=10,'cannon body, muzzle, base and effects');
 assert.equal(art.drawRemadeFriend(mock().ctx,{x:50,y:70,time:2}),true);
 assert.equal(art.drawRemadeEnemy(mock().ctx,{type:4,x:50,y:70}),false);
-assert.equal(art.propArtVersion,15);
+assert.equal(art.propArtVersion,16);
 sandbox.window.BounceRemaster.quality='classic';
 for(const fn of [()=>art.drawRemadeTrampoline(mock().ctx,{x:0,y:0,imageId:497}),
   ()=>art.drawRemadeEnemy(mock().ctx,{type:0,x:0,y:0}),
@@ -62,7 +62,7 @@ const forms=fs.readFileSync('remaster/forms.js','utf8');
 for(const method of ['drawRemadeCannon','drawRemadeTrampoline','drawRemadeFriend','drawRemadeEnemy']){
   assert.ok(game.includes('BounceRemaster?.'+method+'?.('),'unwired '+method);
 }
-assert.ok(page.includes('remaster/props.js?v=15'));
+assert.ok(page.includes('remaster/props.js?v=16'));
 assert.match(book,/api.drawTitleBook=drawTitleBook/);
 assert.match(forms,/art.drawRemadeForm=drawRemadeForm/);
 console.log('V15 vector props: all 3 spring families, 4 enemy classes, aimed cannon, NPC, classic fallback OK.');

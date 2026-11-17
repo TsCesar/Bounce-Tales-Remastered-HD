@@ -92,26 +92,26 @@ const scenarios=[
         for(const name of ['drawRemadeTrampoline','drawRemadeCannon','drawRemadeEnemy','drawRemadeFriend']){
           if(typeof art[name]!=='function')throw Error('Missing V15: '+name);
         }
-        const c=document.createElement('canvas');c.width=1200;c.height=720;
+        const c=document.createElement('canvas');c.width=1500;c.height=720;
         const ctx=c.getContext('2d');ctx.scale(3,3);
-        ctx.fillStyle='#E9F2EC';ctx.fillRect(0,0,400,240);
+        ctx.fillStyle='#E9F2EC';ctx.fillRect(0,0,500,240);
         const labels=[
-          ['FOREST SPRING',70,95],['LAGOON SPRING',200,95],
-          ['TWILIGHT SPRING',330,95],['CANNON',70,205],
-          ['CANDLE',160,205],['BUMPER',235,205],
-          ['MOLE',315,205],['STALKER',380,205]
+          ['FOREST SPRING',80,95],['LAGOON SPRING',245,95],
+          ['TWILIGHT SPRING',410,95],['CANNON',65,205],
+          ['CANDLE',160,205],['BUMPER',250,205],
+          ['MOLE',340,205],['STALKER',445,205]
         ];
         for(const [label,x,y] of labels){
           ctx.fillStyle='#294959';ctx.font='bold 6px system-ui';
           ctx.textAlign='center';ctx.fillText(label,x,y+9);
         }
-        for(const [imageId,x] of [[497,70],[509,200],[490,330]]){
+        for(const [imageId,x] of [[497,80],[509,245],[490,410]]){
           if(!art.drawRemadeTrampoline(ctx,{x,y:77,imageId,frame:2,active:true}))
             throw Error('Unrenderable spring: '+imageId);
         }
-        if(!art.drawRemadeCannon(ctx,{x:70,y:190,angle:.4,active:true,animMs:610}))
+        if(!art.drawRemadeCannon(ctx,{x:65,y:190,angle:.4,active:true,animMs:610}))
           throw Error('Cannon illustration missing');
-        for(const [type,x] of [[0,160],[1,235],[2,315],[3,380]]){
+        for(const [type,x] of [[0,160],[1,250],[2,340],[3,445]]){
           if(!art.drawRemadeEnemy(ctx,{type,x,y:185,time:1.5,state:1,
              propelType:1,molePeekTimer:800,molePeekPeriod:800}))
             throw Error('Enemy illustration missing: '+type);
