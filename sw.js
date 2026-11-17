@@ -1,5 +1,5 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-validated-atlases';
+const CACHE_NAME = 'bounce-tales-v62' + '-classic-remaster-v23';
 const APP_SHELL = [
   "./",
   "index.html",
@@ -7,7 +7,7 @@ const APP_SHELL = [
   "remaster/remaster.css?v=23-remaster",
   "remaster/remaster.js?v=23-remaster",
   "remaster/book.js?v=13",
-  "remaster/texture-hd.js?v=24",
+  "remaster/texture-hd.js?v=22",
   "remaster/scenery.js?v=22-hd",
   "remaster/materials.js?v=22",
   "remaster/forms.js?v=14",
@@ -95,14 +95,12 @@ self.addEventListener('fetch', event => {
     const cache = await caches.open(CACHE_NAME);
     // Shell and previously used resources are served immediately on repeat visits.
     const cached = await cache.match(request);
-    if (cached && request.mode !== 'navigate') return cached;
+    if (cached) return cached;
     try {
       const response = await fetch(request);
-      if (response.status >= 500 && request.mode === 'navigate' && cached) return cached;
       if (response && response.ok && response.type === 'basic') await cache.put(request, response.clone());
       return response;
     } catch (error) {
-      if (cached) return cached;
       const keys = await cache.keys();
       const fallback = keys.find(key => {
         const candidate = new URL(key.url);

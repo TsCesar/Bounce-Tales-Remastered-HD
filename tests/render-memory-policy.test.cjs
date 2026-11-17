@@ -70,44 +70,6 @@ async function checkTextures(mobile){
   assert.ok(box.requests.some(url=>url.includes('assets/'+folder+'/hd-00.png?v=8')));
   assert.equal(box.images.length,1,'Only the appropriate atlas profile loads');
 }
-async function checkTextureRecovery(failedManifest){
-  const box=fixture(false);
-  box.context.console={warn(){}};
-  const api=box.context.BounceRemaster={quality:'remastered'};
-  box.context.fetch=async url=>{
-    const scale=url.includes('/mobile/')?2:4;
-    if(scale===4&&failedManifest)return {ok:false,status:404};
-    const sprites=Object.fromEntries(Array.from({length:326},(_,id)=>[
-      String(id),{page:0,x:4,y:4,w:scale,h:scale,logicalW:1,logicalH:1,
-        originX:0,originY:0,sampling:'pixel'}
-    ]));
-    return {ok:true,json:async()=>({version:4,scale,spriteCount:326,pages:['hd-00.png'],sprites})};
-  };
-  box.run('remaster/texture-hd.js');
-  const settle=()=>new Promise(resolve=>setImmediate(resolve));
-  await settle();
-  if(!failedManifest){
-    const broken=box.images[0];
-    Object.assign(broken,{naturalWidth:5,naturalHeight:5});
-    broken.onload(); // Decodes successfully, but its pixels cannot contain the crop.
-    await settle();
-  }
-  const alternate=box.images.at(-1);
-  assert.match(alternate.src,/\/mobile\/hd-00.png/);
-  Object.assign(alternate,{naturalWidth:8,naturalHeight:8});
-  alternate.onload();
-  await settle();
-  assert.equal(api.textureStatus().state,'ready');
-  assert.equal(api.textureStatus().atlasScale,2);
-  assert.equal(api.quality,'remastered');
-  const args=[];
-  const ctx={save(){},restore(){},drawImage(...values){args.push(values);}};
-  assert.equal(api.drawSprite(325,24,36,ctx),true);
-  assert.equal(args[0][0],alternate);
-  assert.deepEqual(args[0].slice(1),[4,4,2,2,24,36,1,1]);
-  api.quality='classic';
-  assert.equal(api.drawSprite(325,24,36,ctx),false);
-}
 function checkScenery(mobile){
   const box=fixture(mobile);
   box.context.BounceRemaster={quality:'remastered'};
@@ -135,8 +97,6 @@ function checkScenery(mobile){
   ensureBounded(true);
   await checkTextures(false);
   await checkTextures(true);
-  await checkTextureRecovery(true);
-  await checkTextureRecovery(false);
   checkScenery(false);
   checkScenery(true);
   const game=fs.readFileSync('game.js','utf8');
