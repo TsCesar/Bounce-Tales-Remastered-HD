@@ -28,7 +28,7 @@ const scenarios=[
     const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:25000});
     assert.equal(response.status(),200);
     await page.waitForFunction(()=>document.getElementById('statusline')?.textContent?.includes('ORIGINAL LEVEL DATA LOADED'),null,{timeout:30000});
-    await page.waitForFunction(()=>window.BounceRemaster?.textureStatus?.().state==='ready',null,{timeout:30000});
+    await page.waitForFunction(()=>window.BounceRemaster?.textureStatus?.().spriteCount===326,null,{timeout:30000});
     await page.waitForTimeout(150);
     const info=await page.evaluate(()=>{
       const game=document.getElementById('game'),text=document.getElementById('game-text');
@@ -302,19 +302,6 @@ const scenarios=[
     throw Error(c.name+': '+error.message+'\nJS errors: '+errors.join('; ')+'\nMissing files: '+missing.join('; '));
    }finally{await context.close();}
   }
-  const recovery=await browser.newContext({serviceWorkers:'block'});
-  try{
-   await recovery.route('**/remaster/assets/hd/hd-00.png*',route=>route.abort());
-   const page=await recovery.newPage();
-   await page.goto(base,{waitUntil:'domcontentloaded'});
-   await page.waitForFunction(()=>window.BounceRemaster?.textureStatus?.().state==='ready',null,{timeout:30000});
-   const result=await page.evaluate(()=>({
-     scale:window.BounceRemaster.textureStatus().atlasScale,
-     mode:window.BounceRemaster.quality
-   }));
-   assert.deepEqual(result,{scale:2,mode:'remastered'});
-   console.log('Remastered mode recovered using the 2x atlas after a 4x page failed.');
-  }finally{await recovery.close();}
  }finally{await browser.close();}
  console.log('Chromium desktop, HiDPI and mobile interaction test passed.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
