@@ -137,3 +137,22 @@ html[data-bounce-remaster="classic"] #game-wrap #game {image-rendering:pixelated
   #app .game-stage {width:min(calc(100vw - 18px),calc((100dvh - 72px)*.75)) !important;}
 }
 @media (prefers-reduced-motion:reduce) {#app .topbar {transition:none;}}
+
+/* V22: a single, readable Remasterizado control and its Classic fallback. */
+#remaster-toolbar [data-remaster-mode] {
+  min-width:114px;
+  white-space:nowrap;
+  letter-spacing:.01em;
+}
+@media (max-width:420px) {
+  #remaster-toolbar [data-remaster-mode] {
+    min-width:77px;
+    padding-inline:5px;
+    font-size:0;
+  }
+  #remaster-toolbar [data-remaster-mode]::after {
+    content:attr(data-short-label);
+    font-size:10px;
+    font-weight:750;
+  }
+}

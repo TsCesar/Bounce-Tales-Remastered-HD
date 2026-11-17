@@ -33,10 +33,35 @@
     biomes:[...cache.keys()],style:'cartoon-retro-hd'
   });
 
+  const FALLBACKS={
+    forest:['#75BBE2','#B2E4DD','#7DBDA0'],
+    lagoon:['#66BDD5','#C6EFE2','#6AB8A9'],
+    twilight:['#5D639B','#A79CCB','#737DAD'],
+    sunset:['#A674B3','#F5B8AB','#B586A4']
+  };
+  function drawLoadingBackdrop(ctx,biome){
+    const colors=FALLBACKS[biome];
+    ctx.save();
+    const sky=ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,colors[0]);sky.addColorStop(.65,colors[1]);
+    sky.addColorStop(1,colors[2]);
+    ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    // Continuous hand-drawn hills, not the old repeated parallax sprites.
+    ctx.beginPath();ctx.moveTo(0,H*.68);
+    ctx.bezierCurveTo(W*.27,H*.61,W*.41,H*.75,W*.64,H*.66);
+    ctx.bezierCurveTo(W*.80,H*.58,W*.92,H*.67,W,H*.62);
+    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+    ctx.fillStyle=colors[2];ctx.fill();
+    ctx.restore();
+  }
   function drawScenery(ctx,level,time,cameraX,cameraY){
-    if(remaster.quality==='classic')return;
-    const image=getBackdrop(biomeFor(level));
-    if(!image.complete||!image.naturalWidth)return false;
+    if(remaster.quality==='classic')return false;
+    const biome=biomeFor(level);
+    const image=getBackdrop(biome);
+    if(!image.complete||!image.naturalWidth){
+      drawLoadingBackdrop(ctx,biome);
+      return true;
+    }
     ctx.save();
     ctx.imageSmoothingEnabled=true;
     ctx.imageSmoothingQuality='high';
@@ -67,7 +92,7 @@
     ctx.fillStyle=color;
     ctx.fillRect(left,top,right-left,bottom-top);
 
-    const rows=remaster.quality==='ultra'?4:3;
+    const rows=4;
     const width=Math.max(1,right-left),height=Math.max(1,bottom-top);
     const startX=Math.max(-6,left),endX=Math.min(W+6,right);
     for(let i=0;i<rows;i++){
