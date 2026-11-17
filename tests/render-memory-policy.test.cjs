@@ -76,13 +76,20 @@ function checkScenery(mobile){
   box.run('remaster/scenery.js');
   const api=box.context.BounceRemaster;
   assert.equal(box.images.length,0,'No background should preload on menu');
-  // Our images are still loading; drawing passes must not access ctx yet.
-  api.drawScenery({},0,0,0,0);
+  // While the HD image is loading, a vector cartoon fallback is painted
+  // immediately rather than exposing the old pixelated parallax strips.
+  let painted=0;
+  const ctx={save(){},restore(){},createLinearGradient(){
+    return {addColorStop(){}};
+  },fillRect(){painted++;},beginPath(){},moveTo(){},
+    bezierCurveTo(){},lineTo(){},closePath(){},fill(){}};
+  assert.equal(api.drawScenery(ctx,0,0,0,0),true);
+  assert.ok(painted>=1,'loading fallback must cover the viewport');
   assert.equal(box.images.length,1);
-  api.drawScenery({},5,0,0,0);
-  api.drawScenery({},10,0,0,0);
+  api.drawScenery(ctx,5,0,0,0);
+  api.drawScenery(ctx,10,0,0,0);
   assert.equal(api.sceneryStatus().cachedBackdrops,mobile?1:2);
-  api.drawScenery({},0,0,0,0);
+  api.drawScenery(ctx,0,0,0,0);
   assert.ok(api.sceneryStatus().cachedBackdrops<= (mobile?1:2));
 }
 (async()=>{
