@@ -90,6 +90,7 @@ html[data-bounce-remaster="classic"] #game-wrap #game {image-rendering:pixelated
   cursor:pointer;
   backdrop-filter:blur(8px);
 }
+#remaster-toolbar [data-remaster-mode] {white-space:nowrap;}
 #remaster-toolbar button:focus-visible {outline:2px solid #c9f3ff;outline-offset:2px;}
 #remaster-toolbar button:hover {background:#24465d;}
 @media (pointer:coarse),(hover:none) {
@@ -137,3 +138,22 @@ html[data-bounce-remaster="classic"] #game-wrap #game {image-rendering:pixelated
   #app .game-stage {width:min(calc(100vw - 18px),calc((100dvh - 72px)*.75)) !important;}
 }
 @media (prefers-reduced-motion:reduce) {#app .topbar {transition:none;}}
+
+/* V23: the two selected modes are Clásico and Remasterizado. */
+#remaster-toolbar [data-remaster-mode] {
+  min-width:114px;
+  white-space:nowrap;
+  letter-spacing:.01em;
+}
+@media (max-width:420px) {
+  #remaster-toolbar [data-remaster-mode] {
+    min-width:77px;
+    padding-inline:5px;
+    font-size:0;
+  }
+  #remaster-toolbar [data-remaster-mode]::after {
+    content:attr(data-short-label);
+    font-size:10px;
+    font-weight:750;
+  }
+}

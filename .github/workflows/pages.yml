@@ -2,7 +2,7 @@ name: Publicar Bounce Tales en GitHub Pages
 
 on:
   push:
-    branches: [web]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   validar:
-    if: github.ref == 'refs/heads/web'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/web'
     name: Comprobar juego completo
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
-      name: github-pages
+      name: ${{ github.ref_name == 'main' && 'github-pages' || 'bounce-tales-web' }}
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Obtener codigo

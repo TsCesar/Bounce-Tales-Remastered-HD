@@ -17,7 +17,7 @@ function canvas(){
     createLinearGradient(){calls.gradients++;return{addColorStop(){}}}};
   return {ctx,calls};
 }
-const sandbox={window:{BounceRemaster:{quality:'ultra'}},Math,console};
+const sandbox={window:{BounceRemaster:{quality:'remastered'}},Math,console};
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('remaster/specials.js','utf8'),sandbox);
 const art=sandbox.window.BounceRemaster;

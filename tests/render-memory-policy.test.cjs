@@ -34,21 +34,26 @@ function ensureBounded(mobile){
   const width=mobile?430:1920,height=mobile?573:2560;
   const canvas={width:240,height:320,getBoundingClientRect:()=>fakeRect(width,height)};
   const ctx={imageSmoothingEnabled:false,setTransform(){}};
-  api.setQuality('ultra');
+  assert.equal(api.setQuality('remastered'),true);
+  assert.equal(api.setQuality('ultra'),false,'Removed third mode must be rejected');
+  assert.equal(api.quality,'remastered');
+  assert.deepEqual([...api.qualityOptions],['classic','remastered']);
   api.beginFrame(ctx,canvas);
+  assert.equal(ctx.imageSmoothingEnabled,true,'remaster must use antialiasing');
   const budget=mobile?1300000:3200000;
   assert.ok(canvas.width*canvas.height<=budget+4000,
     'Large high-DPI screens must not create giant framebuffers');
   assert.ok(canvas.width<=2800&&canvas.height<=2800);
   assert.ok(canvas.width>=240&&canvas.height>=320);
   api.setQuality('classic');api.beginFrame(ctx,canvas);
+  assert.equal(ctx.imageSmoothingEnabled,false,'classic must retain pixel edges');
   assert.equal(canvas.width,240);
   assert.equal(canvas.height,320);
   return box;
 }
 async function checkTextures(mobile){
   const box=fixture(mobile);
-  box.context.BounceRemaster={quality:'hd'};
+  box.context.BounceRemaster={quality:'remastered'};
   const expectedScale=mobile?2:4,folder=mobile?'mobile':'hd';
   const sprites=Object.fromEntries(Array.from({length:326},(_,id)=>[
     String(id),{page:0,x:0,y:0,w:expectedScale,h:expectedScale,
@@ -65,19 +70,64 @@ async function checkTextures(mobile){
   assert.ok(box.requests.some(url=>url.includes('assets/'+folder+'/hd-00.png?v=8')));
   assert.equal(box.images.length,1,'Only the appropriate atlas profile loads');
 }
+async function checkTextureRecovery(failedManifest){
+  const box=fixture(false);
+  box.context.console={warn(){}};
+  const api=box.context.BounceRemaster={quality:'remastered'};
+  box.context.fetch=async url=>{
+    const scale=url.includes('/mobile/')?2:4;
+    if(scale===4&&failedManifest)return {ok:false,status:404};
+    const sprites=Object.fromEntries(Array.from({length:326},(_,id)=>[
+      String(id),{page:0,x:4,y:4,w:scale,h:scale,logicalW:1,logicalH:1,
+        originX:0,originY:0,sampling:'pixel'}
+    ]));
+    return {ok:true,json:async()=>({version:4,scale,spriteCount:326,pages:['hd-00.png'],sprites})};
+  };
+  box.run('remaster/texture-hd.js');
+  const settle=()=>new Promise(resolve=>setImmediate(resolve));
+  await settle();
+  if(!failedManifest){
+    const broken=box.images[0];
+    Object.assign(broken,{naturalWidth:5,naturalHeight:5});
+    broken.onload(); // Decodes successfully, but its pixels cannot contain the crop.
+    await settle();
+  }
+  const alternate=box.images.at(-1);
+  assert.match(alternate.src,/\/mobile\/hd-00.png/);
+  Object.assign(alternate,{naturalWidth:8,naturalHeight:8});
+  alternate.onload();
+  await settle();
+  assert.equal(api.textureStatus().state,'ready');
+  assert.equal(api.textureStatus().atlasScale,2);
+  assert.equal(api.quality,'remastered');
+  const args=[];
+  const ctx={save(){},restore(){},drawImage(...values){args.push(values);}};
+  assert.equal(api.drawSprite(325,24,36,ctx),true);
+  assert.equal(args[0][0],alternate);
+  assert.deepEqual(args[0].slice(1),[4,4,2,2,24,36,1,1]);
+  api.quality='classic';
+  assert.equal(api.drawSprite(325,24,36,ctx),false);
+}
 function checkScenery(mobile){
   const box=fixture(mobile);
-  box.context.BounceRemaster={quality:'hd'};
+  box.context.BounceRemaster={quality:'remastered'};
   box.run('remaster/scenery.js');
   const api=box.context.BounceRemaster;
   assert.equal(box.images.length,0,'No background should preload on menu');
-  // Our images are still loading; drawing passes must not access ctx yet.
-  api.drawScenery({},0,0,0,0);
+  // While the HD image is loading, a vector cartoon fallback is painted
+  // immediately rather than exposing the old pixelated parallax strips.
+  let painted=0;
+  const ctx={save(){},restore(){},createLinearGradient(){
+    return {addColorStop(){}};
+  },fillRect(){painted++;},beginPath(){},moveTo(){},
+    bezierCurveTo(){},lineTo(){},closePath(){},fill(){}};
+  assert.equal(api.drawScenery(ctx,0,0,0,0),true);
+  assert.ok(painted>=1,'loading fallback must cover the viewport');
   assert.equal(box.images.length,1);
-  api.drawScenery({},5,0,0,0);
-  api.drawScenery({},10,0,0,0);
+  api.drawScenery(ctx,5,0,0,0);
+  api.drawScenery(ctx,10,0,0,0);
   assert.equal(api.sceneryStatus().cachedBackdrops,mobile?1:2);
-  api.drawScenery({},0,0,0,0);
+  api.drawScenery(ctx,0,0,0,0);
   assert.ok(api.sceneryStatus().cachedBackdrops<= (mobile?1:2));
 }
 (async()=>{
@@ -85,6 +135,8 @@ function checkScenery(mobile){
   ensureBounded(true);
   await checkTextures(false);
   await checkTextures(true);
+  await checkTextureRecovery(true);
+  await checkTextureRecovery(false);
   checkScenery(false);
   checkScenery(true);
   const game=fs.readFileSync('game.js','utf8');

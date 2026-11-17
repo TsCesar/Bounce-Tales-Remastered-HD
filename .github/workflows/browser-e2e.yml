@@ -2,7 +2,7 @@ name: Auditoría E2E de gráficos y jugabilidad (Chromium)
 
 on:
   push:
-    branches: [web]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -10,9 +10,9 @@ permissions:
 
 jobs:
   browser:
-    if: github.ref == 'refs/heads/web'
+    if: github.ref == 'refs/heads/main'
     name: Comprobar navegador desktop, retina y móvil
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +36,25 @@ jobs:
           python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
           python tools/build_hd_scenery.py --output public/remaster/assets/scenery
           node tools/verify_mobile_bundle.cjs
+      - name: Crear hoja de referencia con los cuatro fondos retro cartoon
+        shell: bash
+        run: |
+          mkdir -p artifacts/browser
+          python - <<'PY'
+          from PIL import Image, ImageDraw
+          from pathlib import Path
+          folder=Path('public/remaster/assets/scenery')
+          previews=Image.new('RGB',(1216,1670),'#202735')
+          d=ImageDraw.Draw(previews)
+          for i,name in enumerate(['forest','lagoon','twilight','sunset']):
+              image=Image.open(folder/(name+'.webp')).convert('RGB')
+              image.thumbnail((592,780))
+              x=8+(i%2)*608;y=34+(i//2)*816
+              d.text((x+8,y-24),name.upper()+' — CARTOON RETRO HD',fill='#F5F7F9')
+              previews.paste(image,(x,y))
+          previews.save('artifacts/browser/retro-worlds-contact-sheet.jpg',quality=90)
+          print('Four cartoon worlds assembled for visual review')
+          PY
       - name: Probar Chromium desktop y móvil contra la web compilada
         shell: bash
         run: |

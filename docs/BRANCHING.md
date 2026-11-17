@@ -4,8 +4,8 @@
 
 | Rama | Uso | Publicación | Qué NO hace |
 |---|---|---|---|
-| \`main\` | Base compartida y aprobada del motor, niveles y recursos | Ejecuta pruebas; **no** publica ninguna aplicación | No despliega Pages ni compila APK/iOS por cada push |
-| \`web\` | Versión jugable de navegador/PWA y presentación web | \`pages.yml\`: GitHub Pages | No dispara las compilaciones nativas |
+| \`main\` | Base compartida y aprobada del motor, niveles y recursos | Pruebas de calidad y navegador, y GitHub Pages automático | Compilaciones nativas |
+| \`web\` | Versión jugable de navegador/PWA y presentación web | \`pages.yml\`: GitHub Pages manual | Compilaciones nativas |
 | \`android\` | Cambios y empaquetado Android + entregables Gradle | \`native-apps.yml\`: APK debug + proyecto Android Studio | No publica Pages ni compila iOS |
 | \`ios\` | Cambios y empaquetado de iPhone/iPad + Xcode | \`native-apps.yml\`: proyecto Xcode sin firmar | No publica Pages ni compila Android |
 
@@ -39,7 +39,7 @@ git push
 
 ## CI y publicación
 
-- Solo la rama **web** activa automáticamente GitHub Pages (\`.github/workflows/pages.yml\`). La dirección es https://tscesar.github.io/Bounce-Tales-Remastered-HD/
+- Solo la rama **main** activa automáticamente GitHub Pages (`.github/workflows/pages.yml`). Para publicar desde **web**, usa **Run workflow**. La dirección es https://tscesar.github.io/Bounce-Tales-Remastered-HD/
 - Solo la rama **android** activa el job Android de \`.github/workflows/native-apps.yml\`. En el run de Actions encontrarás \`Bounce-Tales-Android-debug-APK\` y \`Bounce-Tales-Android-Studio-project\`.
 - Solo la rama **ios** activa el job iOS de \`.github/workflows/native-apps.yml\`. En el run de Actions encontrarás \`Bounce-Tales-iOS-Xcode-project-unsigned\`.
 - Puedes seleccionar una rama desde **Actions → workflow → Run workflow**. Los jobs tienen una segunda protección a nivel de \`if: github.ref\`, de modo que no ejecuten la plataforma equivocada.

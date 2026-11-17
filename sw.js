@@ -1,26 +1,26 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-remake-coverage-v21';
+const CACHE_NAME = 'bounce-tales-v62' + '-validated-atlases';
 const APP_SHELL = [
   "./",
   "index.html",
   "style.css?v=62",
-  "remaster/remaster.css?v=11",
-  "remaster/remaster.js?v=13",
+  "remaster/remaster.css?v=23-remaster",
+  "remaster/remaster.js?v=23-remaster",
   "remaster/book.js?v=13",
-  "remaster/texture-hd.js?v=8",
-  "remaster/scenery.js?v=14",
-  "remaster/materials.js?v=13",
+  "remaster/texture-hd.js?v=24",
+  "remaster/scenery.js?v=22-hd",
+  "remaster/materials.js?v=22",
   "remaster/forms.js?v=14",
-  "remaster/world.js?v=18",
+  "remaster/world.js?v=23",
   "remaster/props.js?v=16",
   "remaster/tiles.js?v=17",
   "remaster/decor.js?v=18",
-  "remaster/structures.js?v=19",
+  "remaster/structures.js?v=22",
   "remaster/finishing.js?v=19",
   "remaster/specials.js?v=20",
   "remaster/residual.js?v=21",
   "manifest.webmanifest",
-  "sw.js?v=62",
+  "sw.js?v=62-hd",
   "src/image-map.json",
   "src/sprite-atlas.json",
   "assets/original/lang.xx",
@@ -64,7 +64,7 @@ const APP_SHELL = [
   "src/original-hud.js?v=62",
   "src/module-registry.js?v=62",
   "src/port-engine.js?v=62",
-  "game.js?v=62"
+  "game.js?v=62-hd"
 ];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -95,12 +95,14 @@ self.addEventListener('fetch', event => {
     const cache = await caches.open(CACHE_NAME);
     // Shell and previously used resources are served immediately on repeat visits.
     const cached = await cache.match(request);
-    if (cached) return cached;
+    if (cached && request.mode !== 'navigate') return cached;
     try {
       const response = await fetch(request);
+      if (response.status >= 500 && request.mode === 'navigate' && cached) return cached;
       if (response && response.ok && response.type === 'basic') await cache.put(request, response.clone());
       return response;
     } catch (error) {
+      if (cached) return cached;
       const keys = await cache.keys();
       const fallback = keys.find(key => {
         const candidate = new URL(key.url);
