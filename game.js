@@ -131,6 +131,14 @@ function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   // 35 original ground-tile IDs now use fresh vector silhouettes and colors.
   // Keep source anchor, rotation matrix, script flags and depth untouched.
   if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
+     window.BounceRemaster?.drawRemadeResidualSprite?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
+  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
+     window.BounceRemaster?.drawRemadeSpecial?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
+  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
+     window.BounceRemaster?.drawRemadeStructure?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
+  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
+     window.BounceRemaster?.drawRemadeSign?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
+  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
      window.BounceRemaster?.drawRemadeDecor?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
   if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
      window.BounceRemaster?.drawRemadeGroundTile?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
@@ -1127,6 +1135,9 @@ function drawHudNumber(value,x,y,pad=0){
   return cursor-x;
 }
 function drawOriginalGameplayHud(){
+  if(window.BounceRemaster?.drawRemadeHud?.(ctx,{
+    collected,total:eggs.length+enemies.length,seconds:playClock
+  }))return;
   // Direct port of the m.java HUD order: egg icon, collected/total digits,
   // slash, then a right-anchored clock with bitmap minute:second digits.
   ctx.save();ctx.globalAlpha=1;
@@ -1184,7 +1195,10 @@ function drawGameplayScene(){
   }
   for(const e of bonusEggs){if(!e.collected){const p=screenPoint(e);drawImageMap(208,p.x,p.y);}}
   window.BounceRemaster?.finishScene?.(ctx,currentLevel.index,elapsed);
-  particles.draw(ctx,screenPoint,SCALE,(id,x,y,frame)=>drawImageMap(id,x,y,new Set(),frame,ctx));
+  particles.draw(ctx,screenPoint,SCALE,(id,x,y,frame)=>{
+    if(!window.BounceRemaster?.drawRemadeFragment?.(ctx,id,x,y,frame))
+      drawImageMap(id,x,y,new Set(),frame,ctx);
+  });
   // A paused/finished/confirming scene is a frozen picture: the active
   // dialogue must not paint behind a modal menu and obscure its options.
   if(mode===S.play){

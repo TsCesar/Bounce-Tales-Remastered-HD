@@ -20,10 +20,15 @@ Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remak
 - [x] **35 piezas de terreno y plataformas:** bosque 253–266, laguna 162–175 y franjas del tramo final 120–126 redibujados como siluetas vectoriales suavizadas. Se conservan los offsets y tamaños originales; se evita ampliar los píxeles de los atlas antiguos.
 - [x] **19 familias decorativas y peligros:** flores, arbustos, hongos, cristales, árboles, calabazas, anillos del tronco y pinchos redibujados con los recortes y anclajes originales.
 - [x] **Pilares altos del bosque:** decorados con bandas simples de corteza dentro de su geometría, sin cambiar la colisión.
-- [ ] **Resto de props:** quedan por rehacer maderas, puentes y decoraciones no pertenecientes a las familias anteriores; necesitan mapeo con referencia real de cada sprite, no IDs inventados.
+- [x] **Piezas estructurales V19:** redibujadas las familias 130–132 (interior de cuevas) y 176–178 (columnas de la laguna), que se repiten cientos de veces entre los niveles originales.
+- [x] **Carteles y señales V19:** tablas de madera 152/243, flechas y advertencias 153/154 y 244–250, conservando dimensiones y posiciones.
+- [x] **Especiales V20:** torre de rocas (334), descarga vertical (342), columna naranja (345), portal con espiral (350), casa-seta (351) y franja luminosa (354), identificados en los niveles y redibujados con su silueta original.
+- [x] **Últimos 13 IDs directos V21:** mini-objetos y personajes originales 53/54/81/111/112/116/133–137/343/344, incluidos interruptores y cajas con rostro. Se conservan anclajes y eventos.
+- [ ] **Revisión de animaciones e interfaces complementarias:** algunos sprites del atlas pueden aparecer en escenas intermedias y animaciones sin ser objetos RLEF directos; revisar los casos restantes sin inventar arte.
 - [ ] **Animación fotograma a fotograma adicional:** mejorar gestos específicos de enemigos y props que aún estén representados de forma simplificada.
-- [ ] **Efectos:** transformación, impactos, partículas, fragmentos, agua y daño con formas vectoriales coherentes.
-- [ ] **HUD secundario y detalles de nivel:** sustituir los iconos de baja resolución aún visibles sin rehacer el libro.
+- [x] **Efectos V19:** partículas 390 (destellos dorados), 396 (espirales) y 414 (polvo suave) redibujadas según los fotogramas del atlas original, manteniendo su simulación y tiempos.
+- [x] **HUD V19:** iconos y contadores de huevos y tiempo redibujados con texto nítido y contraste accesible, sin modificar el libro ni los valores internos.
+- [ ] **Efectos/HUD restantes:** revisión visual de transiciones, checkpoints, avisos y estados concretos en los 15 niveles.
 - [ ] **Prueba visual integral:** recorrido manual de los quince capítulos, capturas de cada bioma y dispositivos físicos Android/iOS.
 
 ## Política de render
@@ -35,4 +40,4 @@ El **modo Clásico** usa exactamente el render original. **HD/Ultra** dibujan nu
 - Verificar todas las ramas y la generación del APK Android y proyecto Xcode.
 - En cada revisión, comparar capturas; un test de integración correcto no sustituye una revisión visual en móvil.
 
-**Limitación actual:** V18 incorpora el remake de 35 piezas de terreno, 19 motivos de decoración y peligros, enemigos, muelles, cañones, NPC, rocas y fondos, además de las tres formas. Siguen pendientes algunos puentes, madera y otros sprites, así como una inspección manual de los 15 capítulos. El libro y las tres formas V14 permanecen intactos.
+**Limitación actual:** V21 cubre los 89 IDs gráficos que aparecen directamente en los 15 archivos RLEF (incluidos signos compuestos y las dos formaciones de roca). Esto NO demuestra que todos los fotogramas de animación, elementos de menú o sprites usados por código estén redibujados, ni sustituye jugar manualmente los 15 capítulos en móviles reales. El libro y las tres formas V14 siguen intactos.
