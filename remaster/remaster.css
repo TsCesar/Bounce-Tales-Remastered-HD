@@ -90,6 +90,7 @@ html[data-bounce-remaster="classic"] #game-wrap #game {image-rendering:pixelated
   cursor:pointer;
   backdrop-filter:blur(8px);
 }
+#remaster-toolbar [data-remaster-mode] {white-space:nowrap;}
 #remaster-toolbar button:focus-visible {outline:2px solid #c9f3ff;outline-offset:2px;}
 #remaster-toolbar button:hover {background:#24465d;}
 @media (pointer:coarse),(hover:none) {

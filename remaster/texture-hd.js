@@ -28,8 +28,12 @@
     // Small UI/characters use nearest neighbour; large scenery uses carefully
     // alpha-aware precomputed interpolation. No global blur on the game canvas.
     ctx.save();
-    ctx.imageSmoothingEnabled=sprite.sampling==='smooth';
-    if(sprite.sampling==='smooth')ctx.imageSmoothingQuality='high';
+    // Remaining larger source sprites should blend at high-DPI. Preserve
+    // nearest neighbour only for tiny bitmap details that must stay legible.
+    const smooth=sprite.sampling==='smooth'||
+      (sprite.logicalW>=14&&sprite.logicalH>=14);
+    ctx.imageSmoothingEnabled=smooth;
+    if(smooth)ctx.imageSmoothingQuality='high';
     ctx.drawImage(image,sprite.x,sprite.y,sprite.w,sprite.h,
       Math.round(x-sprite.originX),Math.round(y-sprite.originY),
       sprite.logicalW,sprite.logicalH);
