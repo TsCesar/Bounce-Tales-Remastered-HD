@@ -16,7 +16,7 @@ function mock(){
   };
   return {ctx:c,calls};
 }
-const sandbox={window:{BounceRemaster:{quality:'remastered'}},Math,console};
+const sandbox={window:{BounceRemaster:{quality:'hd'}},Math,console};
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('remaster/props.js','utf8'),sandbox);
 const art=sandbox.window.BounceRemaster;

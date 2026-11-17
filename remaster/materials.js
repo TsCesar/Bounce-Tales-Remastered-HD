@@ -50,7 +50,7 @@
     ctx.fillStyle=shade;
     ctx.fillRect(x0,y0,width,height);
 
-    if(remaster.quality==='remastered'&&width>34&&height>17){
+    if(remaster.quality==='ultra'&&width>34&&height>17){
       // Two broad facets per visible region. Stable relative to the object's
       // own bounds and never a repeated pixel/noise pattern.
       ctx.fillStyle=grass?'rgba(225,255,171,.085)':

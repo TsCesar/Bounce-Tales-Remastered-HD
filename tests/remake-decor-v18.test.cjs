@@ -5,7 +5,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm');
 const images=JSON.parse(fs.readFileSync('src/image-map.json','utf8')).maps;
-const sandbox={window:{BounceRemaster:{quality:'remastered'}},Math,console};
+const sandbox={window:{BounceRemaster:{quality:'ultra'}},Math,console};
 vm.createContext(sandbox);vm.runInContext(fs.readFileSync('remaster/decor.js','utf8'),sandbox);
 const art=sandbox.window.BounceRemaster;
 function mock(){

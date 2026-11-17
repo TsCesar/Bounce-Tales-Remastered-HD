@@ -35,7 +35,7 @@
     if(cave){
       ctx.fillStyle='#2D6E71';
       ctx.fillRect(0,0,w,Math.min(1.3,h*.09));
-      if(id===131&&art.quality==='remastered'){
+      if(id===131&&art.quality==='ultra'){
         // A very quiet brush-drawn swirl, not the square pixel spiral.
         ctx.save();ctx.beginPath();ctx.rect(.3,.2,w-.6,h-.4);ctx.clip();
         ctx.strokeStyle='rgba(137,206,174,.16)';ctx.lineWidth=.75;
