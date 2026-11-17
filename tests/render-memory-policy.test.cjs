@@ -34,21 +34,26 @@ function ensureBounded(mobile){
   const width=mobile?430:1920,height=mobile?573:2560;
   const canvas={width:240,height:320,getBoundingClientRect:()=>fakeRect(width,height)};
   const ctx={imageSmoothingEnabled:false,setTransform(){}};
-  api.setQuality('ultra');
+  assert.equal(api.setQuality('remastered'),true);
+  assert.equal(api.setQuality('ultra'),false,'Removed third mode must be rejected');
+  assert.equal(api.quality,'remastered');
+  assert.deepEqual([...api.qualityOptions],['classic','remastered']);
   api.beginFrame(ctx,canvas);
+  assert.equal(ctx.imageSmoothingEnabled,true,'remaster must use antialiasing');
   const budget=mobile?1300000:3200000;
   assert.ok(canvas.width*canvas.height<=budget+4000,
     'Large high-DPI screens must not create giant framebuffers');
   assert.ok(canvas.width<=2800&&canvas.height<=2800);
   assert.ok(canvas.width>=240&&canvas.height>=320);
   api.setQuality('classic');api.beginFrame(ctx,canvas);
+  assert.equal(ctx.imageSmoothingEnabled,false,'classic must retain pixel edges');
   assert.equal(canvas.width,240);
   assert.equal(canvas.height,320);
   return box;
 }
 async function checkTextures(mobile){
   const box=fixture(mobile);
-  box.context.BounceRemaster={quality:'hd'};
+  box.context.BounceRemaster={quality:'remastered'};
   const expectedScale=mobile?2:4,folder=mobile?'mobile':'hd';
   const sprites=Object.fromEntries(Array.from({length:326},(_,id)=>[
     String(id),{page:0,x:0,y:0,w:expectedScale,h:expectedScale,
@@ -67,7 +72,7 @@ async function checkTextures(mobile){
 }
 function checkScenery(mobile){
   const box=fixture(mobile);
-  box.context.BounceRemaster={quality:'hd'};
+  box.context.BounceRemaster={quality:'remastered'};
   box.run('remaster/scenery.js');
   const api=box.context.BounceRemaster;
   assert.equal(box.images.length,0,'No background should preload on menu');
