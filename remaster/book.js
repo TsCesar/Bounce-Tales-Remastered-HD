@@ -123,6 +123,31 @@
     marker(left,1);marker(right,-1);
     return true;
   }
+  // Source bitmap ornaments had a solid pale backing that covered headings
+  // in modal menus. Decorative vectors fit within each panel's four corners.
+  function drawPanelOrnaments(ctx,x,y,w,h){
+    if(api.quality==='classic')return false;
+    const inset=8,extent=Math.min(16,w*.12,h*.12);
+    ctx.save();
+    ctx.strokeStyle='rgba(228,191,114,.65)';
+    ctx.lineWidth=.8;
+    for(const horizontal of [1,-1]){
+      for(const vertical of [1,-1]){
+        const px=horizontal===1?x+inset:x+w-inset;
+        const py=vertical===1?y+inset:y+h-inset;
+        ctx.beginPath();
+        ctx.moveTo(px,py+vertical*extent);
+        ctx.lineTo(px,py);
+        ctx.lineTo(px+horizontal*extent,py);
+        ctx.stroke();
+        ctx.fillStyle='#caa267';
+        ctx.beginPath();ctx.arc(px+horizontal*3,py+vertical*3,.8,0,PI*2);ctx.fill();
+      }
+    }
+    ctx.restore();
+    return true;
+  }
+  api.drawPanelOrnaments=drawPanelOrnaments;
   api.drawSelectionArrows=drawSelectionArrows;
   api.drawTitleBook=drawTitleBook;
   api.drawChapterBook=drawChapterBook;
