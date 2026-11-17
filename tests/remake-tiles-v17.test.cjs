@@ -16,7 +16,7 @@ function mock(){
   };
   return {ctx,calls};
 }
-const sandbox={window:{BounceRemaster:{quality:'remastered'}},console,Math};
+const sandbox={window:{BounceRemaster:{quality:'hd'}},console,Math};
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('remaster/tiles.js','utf8'),sandbox);
 const art=sandbox.window.BounceRemaster;

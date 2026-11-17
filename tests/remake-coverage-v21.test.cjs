@@ -9,7 +9,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const RLEF=require('../src/rlef-reader.js');
 const atlas=JSON.parse(fs.readFileSync('src/image-map.json','utf8')).maps;
-const sandbox={window:{BounceRemaster:{quality:'remastered'}},Math,console};
+const sandbox={window:{BounceRemaster:{quality:'hd'}},Math,console};
 vm.createContext(sandbox);
 for(const file of ['remaster/tiles.js','remaster/decor.js',
   'remaster/structures.js','remaster/finishing.js',
