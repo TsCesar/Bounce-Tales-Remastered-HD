@@ -14,7 +14,6 @@ assert.match(game,/function drawOriginalChapterBook\(\)/);
 assert.match(game,/drawImageMap\(332,120,160\)/);
 assert.match(game,/drawImageMap\(331,120,160\)/);
 assert.match(game,/const left=labelLeft-19\+pulse,right=labelRight\+19-pulse/);
-assert.match(game,/BounceRemaster\?\.drawSelectionArrows\?\.\(ctx,left,right,centerY\)/);
 assert.match(game,/drawImageMap\(2,left,centerY\)/);
 assert.match(game,/drawImageMap\(326,right,centerY\)/);
 const title=game.slice(game.indexOf('function drawCanvasTitle'),game.indexOf('function drawCanvasChapterBook'));

@@ -1,6 +1,6 @@
 'use strict';
 /* Produce a fully LOCAL asset bundle for Capacitor on Android and iOS.
- * Run after npm install; generated HD texture and scenery pages are added
+ * Run after npm install. The upscaled original atlases are added
  * by CI before npx cap sync. No remote site URL or network is required.
  */
 const fs=require('node:fs');
@@ -27,7 +27,7 @@ for(const dir of dirs){
 const html=fs.readFileSync(path.join(output,'index.html'),'utf8');
 for(const resource of [
  'src/rlef-reader.js','assets/original/bf',
- 'remaster/book.js','remaster/remaster.js','src/rock-break.js'
+ 'remaster/remaster.js','remaster/texture-hd.js','src/rock-break.js'
 ]){
   const file=path.join(output,resource);
   if(!fs.existsSync(file))throw Error('Native bundle missing: '+resource);
@@ -37,6 +37,6 @@ if(!html.includes('window.Capacitor?.isNativePlatform?.()'))throw Error(
 );
 fs.writeFileSync(path.join(output,'mobile-bundle.json'),JSON.stringify({
   platform:'capacitor',offline:true,assetBase:'relative',
-  originalGameFiles:true,generatedAssets:['remaster/assets/hd','remaster/assets/scenery']
+  originalGameFiles:true,generatedAssets:['remaster/assets/hd','remaster/assets/mobile']
 },null,2));
 console.log('Prepared offline game bundle:',output);

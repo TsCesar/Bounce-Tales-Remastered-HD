@@ -81,15 +81,4 @@ for(const id of art.signIds)
   assert.equal(art.drawRemadeSign(fakeCanvas().ctx,id,20,40,maps[String(id)]),false);
 assert.equal(art.drawRemadeHud(fakeCanvas().ctx,{collected:1,total:1,seconds:1}),false);
 assert.equal(art.drawRemadeFragment(fakeCanvas().ctx,390,20,40,0),false);
-const game=fs.readFileSync('game.js','utf8');
-const html=fs.readFileSync('index.html','utf8');
-const sw=fs.readFileSync('sw.js','utf8');
-const book=fs.readFileSync('remaster/book.js','utf8');
-for(const name of ['structures','finishing']){
-  assert.ok(html.includes('remaster/'+name+'.js?v=19'));
-  assert.ok(sw.includes('remaster/'+name+'.js?v=19'));
-}
-for(const name of ['drawRemadeStructure','drawRemadeSign','drawRemadeHud','drawRemadeFragment'])
-  assert.ok(game.includes('BounceRemaster?.'+name+'?.('),'not wired '+name);
-assert.match(book,/api.drawTitleBook=drawTitleBook/);
 console.log('V19 remaster: 6 structural sprite families (800+ uses), 11 source signs, HD HUD, 3 debris sprites and exact Classic fallback OK.');

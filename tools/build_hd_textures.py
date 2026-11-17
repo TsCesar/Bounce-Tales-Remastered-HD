@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Clean, category-aware restoration of all 326 verified Bounce Tales sprites.
-
-This deliberately does not hallucinate new image detail: the source is 240x320
-J2ME art. It avoids the old grain, aggressive sharpening, contrast shifts and
-semi-transparent fringe artifacts. Original files and collision geometry remain
-untouched. Run again for deterministic atlases and metadata.
-"""
+"""Build high-resolution atlases from the original Bounce Tales sprite crops."""
 from __future__ import annotations
 
 import argparse
@@ -15,7 +9,28 @@ from PIL import Image
 
 PAGE_SIZE = 2048
 PADDING = 8
-MANIFEST_VERSION = 4
+GUTTER = PADDING // 2
+MANIFEST_VERSION = 5
+
+
+def source_sprites(catalogue: dict, image_map: dict) -> list[dict]:
+    """Include the static catalogue and the extra directly drawable image maps."""
+    sprites = list(catalogue["sprites"])
+    assert len(sprites) == catalogue["static_sprite_count"] == 326
+    assert [entry["png"] for entry in catalogue["png_images"]] == image_map["atlases"]
+    for sprite_id, entry in image_map["maps"].items():
+        if int(sprite_id) < 326 or entry["type"] != "simple":
+            continue
+        sprites.append({
+            "sprite_id": int(sprite_id),
+            "image_slot": entry["image"],
+            "crop": {
+                "x": entry["atlasX"], "y": entry["atlasY"],
+                "width": entry["width"], "height": entry["height"],
+            },
+            "draw_offset": {"x": entry["originX"], "y": entry["originY"]},
+        })
+    return sprites
 
 
 def sampling_for(crop: dict) -> str:
@@ -27,14 +42,36 @@ def sampling_for(crop: dict) -> str:
 
 
 def restore_sprite(image: Image.Image, scale: int, sampling: str) -> Image.Image:
-    if sampling not in ("pixel", "smooth"):
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+    size = (image.width * scale, image.height * scale)
+    sharp = image.resize(size, Image.Resampling.NEAREST)
+    if sampling == "pixel":
+        return sharp
+    if sampling != "smooth":
         raise ValueError("Unknown sampling policy")
-    # Pillow's RGBA Lanczos internally resamples premultiplied alpha.
-    # Crucially: no synthetic grain, noise, unsharp mask or colour changes.
-    resampling = Image.Resampling.NEAREST if sampling == "pixel" else Image.Resampling.LANCZOS
-    return image.convert("RGBA").resize(
-        (image.width * scale, image.height * scale), resampling
-    )
+    # Blend a small amount of alpha-aware interpolation into the original
+    # pixels. Keep opacity and the outer source pixels for silhouettes and seams.
+    smooth = Image.blend(sharp, image.resize(size, Image.Resampling.BILINEAR), 0.25)
+    smooth.putalpha(sharp.getchannel("A"))
+    box = (scale, scale, size[0] - scale, size[1] - scale)
+    sharp.paste(smooth.crop(box), box[:2])
+    return sharp
+
+
+def extrude_edges(image: Image.Image) -> Image.Image:
+    """Extend edge pixels into the gap between smoothed atlas sprites."""
+    width, height = image.size
+    padded_width = width + 2 * GUTTER
+    padded = Image.new("RGBA", (padded_width, height + 2 * GUTTER))
+    padded.paste(image, (GUTTER, GUTTER))
+    for edge_x, left in ((0, 0), (width - 1, width + GUTTER)):
+        column = image.crop((edge_x, 0, edge_x + 1, height))
+        padded.paste(column.resize((GUTTER, height), Image.Resampling.NEAREST), (left, GUTTER))
+    for edge_y, top in ((GUTTER, 0), (height + GUTTER - 1, height + GUTTER)):
+        row = padded.crop((0, edge_y, padded_width, edge_y + 1))
+        padded.paste(row.resize((padded_width, GUTTER), Image.Resampling.NEAREST), (0, top))
+    return padded
 
 
 class Atlas:
@@ -44,7 +81,7 @@ class Atlas:
         self.next_y = PADDING
         self.row_height = 0
 
-    def put(self, image: Image.Image):
+    def put(self, image: Image.Image, sampling: str):
         width, height = image.size
         if width + 2 * PADDING > PAGE_SIZE or height + 2 * PADDING > PAGE_SIZE:
             raise ValueError(f"Sprite too large for atlas: {width}x{height}")
@@ -55,7 +92,10 @@ class Atlas:
         if self.next_y + height + PADDING > PAGE_SIZE:
             return None
         xy = (self.next_x, self.next_y)
-        self.image.paste(image, xy)
+        if sampling == "smooth":
+            self.image.paste(extrude_edges(image), (xy[0] - GUTTER, xy[1] - GUTTER))
+        else:
+            self.image.paste(image, xy)
         self.next_x += width + PADDING
         self.row_height = max(self.row_height, height)
         return xy
@@ -64,14 +104,15 @@ class Atlas:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--catalogue", default="src/sprite-atlas.json")
+    parser.add_argument("--image-map", default="src/image-map.json")
     parser.add_argument("--source", default="assets/original")
     parser.add_argument("--output", default="remaster/assets/hd")
     parser.add_argument("--scale", type=int, default=4, choices=[2, 4])
     args = parser.parse_args()
 
     catalogue = json.loads(Path(args.catalogue).read_text(encoding="utf-8"))
-    assert catalogue["static_sprite_count"] == 326
-    assert len(catalogue["sprites"]) == 326
+    image_map = json.loads(Path(args.image_map).read_text(encoding="utf-8"))
+    sprites = source_sprites(catalogue, image_map)
     assert len(catalogue["png_images"]) == 46
     original = {}
     for item in catalogue["png_images"]:
@@ -83,7 +124,7 @@ def main():
     pages = [Atlas()]
     manifest_sprites = {}
     policy_counts = {"pixel": 0, "smooth": 0}
-    ordered = sorted(catalogue["sprites"], key=lambda s: (
+    ordered = sorted(sprites, key=lambda s: (
         -s["crop"]["height"], -s["crop"]["width"], s["sprite_id"]))
     for entry in ordered:
         sid = entry["sprite_id"]
@@ -91,13 +132,16 @@ def main():
             raise ValueError(f"Duplicate sprite {sid}")
         rect = entry["crop"]
         area = (rect["x"], rect["y"], rect["x"] + rect["width"], rect["y"] + rect["height"])
-        src = original[entry["image_slot"]].crop(area)
+        sheet = original[entry["image_slot"]]
+        if not (0 <= area[0] < area[2] <= sheet.width and 0 <= area[1] < area[3] <= sheet.height):
+            raise ValueError(f"Sprite {sid} exceeds its original atlas")
+        src = sheet.crop(area)
         policy = sampling_for(rect)
         enhanced = restore_sprite(src, args.scale, policy)
-        location = pages[-1].put(enhanced)
+        location = pages[-1].put(enhanced, policy)
         if location is None:
             pages.append(Atlas())
-            location = pages[-1].put(enhanced)
+            location = pages[-1].put(enhanced, policy)
         assert location is not None
         policy_counts[policy] += 1
         manifest_sprites[str(sid)] = {
@@ -109,7 +153,6 @@ def main():
             "sampling": policy,
         }
 
-    assert len(manifest_sprites) == 326
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
     pages_list = []
@@ -120,7 +163,7 @@ def main():
         print(f"Clean atlas: {name} ({(output/name).stat().st_size//1024} KiB)", flush=True)
     result = {
         "version": MANIFEST_VERSION, "scale": args.scale,
-        "spriteCount": 326, "originalAtlases": 46,
+        "spriteCount": len(manifest_sprites), "originalAtlases": len(original),
         "policyCounts": policy_counts,
         "pages": pages_list, "sprites": manifest_sprites,
     }

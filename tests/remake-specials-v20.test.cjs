@@ -48,12 +48,4 @@ for(const id of [337,357,358,381,390])
 sandbox.window.BounceRemaster.quality='classic';
 for(const id of ids)
   assert.equal(art.drawRemadeSpecial(canvas().ctx,id,100,130,maps[String(id)]),false);
-const game=fs.readFileSync('game.js','utf8');
-const html=fs.readFileSync('index.html','utf8');
-const sw=fs.readFileSync('sw.js','utf8');
-assert.match(game,/BounceRemaster\?\.drawRemadeSpecial\?\.\(ctx,id,x,y,imageMaps.maps\[String\(id\)\]\)/);
-assert.match(html,/remaster\/specials\.js\?v=20/);
-assert.match(sw,/remaster\/specials\.js\?v=20/);
-assert.match(fs.readFileSync('remaster/book.js','utf8'),/api.drawTitleBook=drawTitleBook/);
-assert.match(fs.readFileSync('remaster/forms.js','utf8'),/art.drawRemadeForm=drawRemadeForm/);
 console.log('V20 special remakes: source-backed stone tower, lightning, orange shaft, portal, mushroom house and gradient strip OK.');

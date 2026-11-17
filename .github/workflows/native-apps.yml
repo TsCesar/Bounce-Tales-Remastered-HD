@@ -11,7 +11,6 @@ on:
       - 'tools/verify_mobile_bundle.cjs'
       - 'tools/build_hd_textures.py'
       - 'tools/validate_hd_textures.py'
-      - 'tools/build_hd_scenery.py'
       - 'remaster/**'
       - 'src/**'
       - 'assets/**'
@@ -48,16 +47,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Construir web local, texturas y fondos
+      - name: Construir web local con atlas originales ampliados
         run: |
-          python -m pip install --disable-pip-version-check pillow numpy
+          python -m pip install --disable-pip-version-check pillow
           node tools/build_mobile_web.cjs
           python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
           python tools/validate_hd_textures.py --output public/remaster/assets/hd
           python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
           python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
-          python tools/build_hd_scenery.py --output public/remaster/assets/scenery
-          test -f public/remaster/assets/scenery/forest.webp
           node tools/verify_mobile_bundle.cjs
       - name: Generar proyecto Android nativo
         run: |
@@ -103,12 +100,11 @@ jobs:
       - name: Instalar Capacitor y recursos locales
         run: |
           npm install --no-audit --no-fund
-          python -m pip install --disable-pip-version-check pillow numpy
+          python -m pip install --disable-pip-version-check pillow
           node tools/build_mobile_web.cjs
           python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
           python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
           python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
-          python tools/build_hd_scenery.py --output public/remaster/assets/scenery
           node tools/verify_mobile_bundle.cjs
       - name: Generar proyecto de Xcode
         run: |

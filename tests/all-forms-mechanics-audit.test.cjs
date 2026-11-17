@@ -140,8 +140,7 @@ for(const name of names){
 }
 assert.ok(rockLevels>=4,'original stage catalogue must contain special rock formations');
 const game=fs.readFileSync(path.join(root,'game.js'),'utf8');
-const visuals=fs.readFileSync(path.join(root,'remaster/remaster.js'),'utf8');
 assert.ok(game.includes('body.moveRight(superBounce)'));
 assert.ok(game.includes('body.moveLeft(superBounce)'));
-assert.ok(visuals.includes('p.form !== 0'));
+assert.match(game,/if\(body.forme===0\)drawBounceForm\(p.x,p.y,r\);\s*else if\(body.forme===1\)drawBumpyForm\(p.x,p.y\);\s*else drawWollyForm\(p.x,p.y,r\);/);
 console.log('All forms audited: constants, jumps, midair control, slope gate, water, bumper enemies, Bumpy rocks, unlocks, Super Bounce reward, save and distinct visuals.');
