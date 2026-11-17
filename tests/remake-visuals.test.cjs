@@ -52,6 +52,6 @@ assert.match(game,/BounceRemaster\?\.drawRemadeProp\?\.\(ctx,id,x,y\)/);
 assert.match(game,/BounceRemaster\?\.drawRemadeTerrain\?\.\(ctx,poly,screenPoint\)/);
 assert.match(game,/if\(window.BounceRemaster\?\.drawScenery\?\.\(/);
 assert.match(index,/remaster\/forms\.js\?v=14/);
-assert.match(index,/remaster\/world\.js\?v=14/);
+assert.match(index,/remaster\/world\.js\?v=18/);
 assert.match(book,/api.drawTitleBook=drawTitleBook/);
 console.log('Remake vector forms: 3 distinct forms, two rock mound variants, seam-free terrain and exact Classic fallback verified.');

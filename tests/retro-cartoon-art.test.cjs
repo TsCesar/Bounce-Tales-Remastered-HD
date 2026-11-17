@@ -38,9 +38,13 @@ for(const name of ['remaster/remaster.js','remaster/book.js','remaster/materials
   assert.ok(html.includes(name+'?v=13'),name+' HTML version');
   assert.ok(sw.includes(name+'?v=13'),name+' PWA version');
 }
-for(const name of ['remaster/scenery.js','remaster/forms.js','remaster/world.js']){
+for(const name of ['remaster/scenery.js','remaster/forms.js']){
   assert.ok(html.includes(name+'?v=14'),name+' remake HTML version');
   assert.ok(sw.includes(name+'?v=14'),name+' remake PWA version');
 }
+assert.ok(html.includes('remaster/world.js?v=18'));
+assert.ok(sw.includes('remaster/world.js?v=18'));
+assert.ok(html.includes('remaster/decor.js?v=18'));
+assert.ok(sw.includes('remaster/decor.js?v=18'));
 assert.match(pages,/m\['version'\]==2 and m\['style'\]=='cartoon-retro-hd'/);
 console.log('Retro cartoon V13: four biomes, cel-shaded ground, simple water, matte eggs, ball and book; all gameplay hooks preserved.');
