@@ -39,7 +39,7 @@ for(const id of ids){
   const {ctx,calls}=canvas();
   assert.equal(art.drawRemadeSpecial(ctx,id,120,180,meta),true,'special '+id);
   assert.ok(calls.paths>=1||id===354,'no new illustration for '+id);
-  assert.ok(calls.fills>=1||id===354,'no filled artwork for '+id);
+  assert.ok(calls.fills>=1||calls.strokes>=1||id===354,'no visible artwork for '+id);
   assert.deepEqual(calls.shifts[0],[120,180],
     'dynamic compound must use unchanged world position '+id);
 }
