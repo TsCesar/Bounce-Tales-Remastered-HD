@@ -231,6 +231,35 @@ const scenarios=[
       fs.writeFileSync(path.join(screenshots,c.name+'-v20-specials.png'),
         Buffer.from(special.split(',')[1],'base64'));
     }
+    if(!c.mobile){
+      const image=await page.evaluate(async()=>{
+        const art=window.BounceRemaster;
+        if(typeof art.drawRemadeResidualSprite!=='function')
+          throw Error('Missing last 13 V21 sprites');
+        const maps=(await(await fetch('src/image-map.json')).json()).maps;
+        const board=document.createElement('canvas');
+        board.width=1650;board.height=900;
+        const ctx=board.getContext('2d');
+        ctx.scale(3,3);ctx.fillStyle='#F0F1EA';ctx.fillRect(0,0,550,300);
+        ctx.fillStyle='#2E4D56';ctx.font='bold 12px system-ui';
+        ctx.fillText('V21 · REMAKE DE LOS ÚLTIMOS 13 SPRITES RLEF',13,21);
+        const ids=[53,54,81,111,112,116,133,134,135,136,137,343,344];
+        for(let i=0;i<ids.length;i++){
+          const id=ids[i],m=maps[String(id)];
+          const first=i<6,slot=first?i:i-6;
+          const x=first?[45,125,207,295,385,490][slot]:
+            [45,105,165,225,285,382,475][slot];
+          const y=first?134:248;
+          if(!art.drawRemadeResidualSprite(ctx,id,x,y,m))
+            throw Error('Missing art for residual sprite '+id);
+          ctx.fillStyle='#284957';ctx.font='bold 9px system-ui';
+          ctx.fillText('ID '+id,x-13,first?184:282);
+        }
+        return board.toDataURL('image/png');
+      });
+      fs.writeFileSync(path.join(screenshots,c.name+'-v21-final-sprite-gallery.png'),
+        Buffer.from(image.split(',')[1],'base64'));
+    }
     const high=await page.evaluate(()=>({
       game:document.getElementById('game').width*document.getElementById('game').height,
       text:document.getElementById('game-text').width*document.getElementById('game-text').height
