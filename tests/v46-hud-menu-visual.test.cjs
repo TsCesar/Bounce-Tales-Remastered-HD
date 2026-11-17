@@ -36,10 +36,8 @@ assert.match(game,/if\(confirmationState\?\.returnMode===S\.pause\)\{drawGamepla
 assert.match(game,/drawImageMap\(332,120,160\)/,'title uses original closed-book asset');
 assert.doesNotMatch(game,/index===7\?'assets\/logo-transparent\.png'/,'PWA icon is never substituted into the original game sprite atlas');
 assert.match(game,/const left=labelLeft-19\+pulse,right=labelRight\+19-pulse/,'J2ME source spacing is preserved for selection arrows');
-assert.match(game,/drawImageMap\(2,left,centerY\)/,'classic mode still draws the original left green arrow');
-assert.match(game,/drawImageMap\(326,right,centerY\)/,'classic mode still draws the original right green arrow');
-assert.match(game,/BounceRemaster\?\.drawSelectionArrows\?\.\(ctx,left,right,centerY\)/,'HD/Ultra use crisp vector arrows without modifying hit boxes');
-assert.match(fs.readFileSync(path.join(root,'remaster/book.js'),'utf8'),/api.drawSelectionArrows=drawSelectionArrows/);
+assert.match(game,/drawImageMap\(2,left,centerY\)/,'all modes draw the original left green arrow');
+assert.match(game,/drawImageMap\(326,right,centerY\)/,'all modes draw the original right green arrow');
 assert.match(game,/drawImageMapRotatedAtTopLeft\(12,147,1,-Math\.PI\/2\)/,'title book reproduces the original upper-right metal corner transform');
 assert.match(game,/drawImageMap\(15,33,85\)/,'title book hinge uses the original left-middle anchor');
 assert.match(game,/\[gameText\(17,'CONTINUE'\),'continue'\],\s*\[gameText\(36,'NEW GAME'\),'newgame'\],\s*\[gameText\(19,'HIGH SCORES'\),'scores'\],\s*\[gameText\(18,'INSTRUCTIONS'\),'guide'\]/,'saved title menu retains the four original J2ME commands in order');
@@ -49,7 +47,7 @@ assert.match(game,/Open Settings → Touch Controls/,'instructions describe the 
 assert.doesNotMatch(game.slice(game.indexOf('function drawCanvasGuide'),game.indexOf('function drawCanvasScores')),/gameText\(12\)|number keys|Press '4'/,'guide no longer shows original handset keypad instructions');
 assert.doesNotMatch(game,/drawImageMap\(10,/,'striped ornament is never stretched as a selection highlight');
 assert.match(html,/src\/original-hud\.js\?v=62/);
-assert.match(html,/game\.js\?v=62/);
+assert.match(html,/game\.js\?v=63/);
 assert.match(sw,/CACHE_NAME\s*=\s*'bounce-tales-v62'/);
 assert.match(sw,/src\/original-hud\.js\?v=62/);
 for(let i=0;i<15;i++){
@@ -58,4 +56,4 @@ for(let i=0;i<15;i++){
   const total=parsed.objects.filter(o=>o.type==='egg'||o.type==='enemy').length;
   assert.equal(total,30,`${resource} original HUD total remains 30`);
 }
-console.log('V46 visual parity checks: classic green arrows preserved, HD/Ultra vector replacements, original HUD, and clean confirmation overlay passed');
+console.log('V46 visual parity checks: original green arrows in all modes, original HUD, and clean confirmation overlay passed');

@@ -126,27 +126,10 @@ function imgFor(index){
 }
 function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   x=Math.round(x);y=Math.round(y);
-  if(id===208&&targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawEgg?.(ctx,x,y,elapsed))return;
   if(!Number.isInteger(id)||id<0||seen.has(id)||seen.size>=32||!imageMaps?.maps)return;
-  // 35 original ground-tile IDs now use fresh vector silhouettes and colors.
-  // Keep source anchor, rotation matrix, script flags and depth untouched.
-  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
-     window.BounceRemaster?.drawRemadeResidualSprite?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
-  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
-     window.BounceRemaster?.drawRemadeSpecial?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
-  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
-     window.BounceRemaster?.drawRemadeStructure?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
-  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
-     window.BounceRemaster?.drawRemadeSign?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
-  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
-     window.BounceRemaster?.drawRemadeDecor?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
-  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
-     window.BounceRemaster?.drawRemadeGroundTile?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
-  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&window.BounceRemaster?.drawRemadeProp?.(ctx,id,x,y))return;
+  // All modes resolve the same compound sprites, animation frames and anchors.
+  if(window.BounceRemaster?.drawSprite?.(id,x,y,targetCtx))return;
   seen.add(id);
-  // Enhanced art reuses the exact sprite ID, crop size and original anchor.
-  // Physics and level geometry never depend on this visual-only replacement.
-  if(window.BounceRemaster?.drawSprite?.(id,x,y,targetCtx)){seen.delete(id);return;}
   // IDs 0–325 use the decoded o.java type-2 descriptor table directly.
   // The catalogue was validated against all 326 legacy image-map records at boot.
   const exact=spriteCatalogue?.get(id);
@@ -446,12 +429,6 @@ function updateCannonAnimations(dt){
   BounceOriginalCannon.update(cannons,dt*1000,cannonMesh);
 }
 function drawCannon(c){
-  const cannonPoint=screenPoint(getWorldPos(c.object));
-  const cannonHeading=cannonState?.cannon===c?cannonState.angle:cannonAngle(c);
-  if(window.BounceRemaster?.drawRemadeCannon?.(ctx,{
-    x:cannonPoint.x,y:cannonPoint.y,angle:cannonHeading,
-    active:c.animationActive,animMs:c.animationElapsedMs
-  }))return;
   if(!cannonMesh){
     const p=screenPoint(getWorldPos(c.object)),a=cannonState?.cannon===c?cannonState.angle:cannonAngle(c);
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-a);drawImageMap(48,0,0);ctx.restore();return;
@@ -628,7 +605,6 @@ function drawWater(zone){
   }
   ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);ctx.closePath();
   ctx.fillStyle=zone.isAirTunnel?'rgba(8,12,17,.28)':'rgba(17,17,238,.27)';ctx.fill();
-  window.BounceRemaster?.drawWaterSurface?.(ctx,{left:sl,right:screenPoint(right),bottomLeft:bl,bottomRight:br,time:elapsed,airTunnel:zone.isAirTunnel});
   if(!zone.isAirTunnel&&zone.region===0){
     ctx.beginPath();
     for(let i=0;i<=steps;i++){
@@ -646,7 +622,6 @@ function drawWater(zone){
   }
 }
 function drawGeometry(poly){
-  if(window.BounceRemaster?.drawRemadeTerrain?.(ctx,poly,screenPoint))return;
   const vs=poly.vertices,faces=poly.faces;
   ctx.fillStyle='#'+poly.color.toString(16).padStart(6,'0');
   ctx.beginPath();
@@ -655,7 +630,6 @@ function drawGeometry(poly){
     ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();
   }
   ctx.fill();
-  window.BounceRemaster?.drawTerrain?.(ctx,poly,screenPoint);
 }
 function drawSprite(o,m){
   if(!m)return;
@@ -747,16 +721,9 @@ function drawPlayer(){
   if(body.visible===false)return;
   const renderBody={x:body.prevX+(body.x-body.prevX)*renderAlpha,y:body.prevY+(body.y-body.prevY)*renderAlpha};
   const p=screenPoint(renderBody),r=Math.floor(BouncePhysics.parameters.radius[body.forme]*SCALE)+1;
-  // All three forms use completely new vector artwork in HD/Ultra. Classic
-  // continues through the untouched J2ME art and eye-animation branches.
-  if(window.BounceRemaster?.drawRemadeForm?.(ctx,{
-    form:body.forme,x:p.x,y:p.y,r,rotation:body.rotation,
-    eyeFrame:body.eyeFrame,vx:body.vx,vy:body.vy,grounded:body.grounded
-  }))return;
   if(body.forme===0)drawBounceForm(p.x,p.y,r);
   else if(body.forme===1)drawBumpyForm(p.x,p.y);
   else drawWollyForm(p.x,p.y,r);
-  window.BounceRemaster?.drawBounce?.(ctx,{x:p.x,y:p.y,r,form:body.forme,rotation:body.rotation,stretch:body.stretchBuffer});
   // The eyes are original image-map animations, drawn after the active form.
   if(body.eyeFrame===1){
     drawImageMap(20,p.x,p.y);
@@ -772,22 +739,17 @@ function drawEnemy(e){
   const renderX=(e.prevX??e.x)+(e.x-(e.prevX??e.x))*renderAlpha;
   const renderY=(e.prevY??e.y)+(e.y-(e.prevY??e.y))*renderAlpha;
   const screen=screenPoint({x:renderX,y:renderY});
-  if(window.BounceRemaster?.drawRemadeEnemy?.(ctx,{
-    type:e.enemyType,x:screen.x,y:screen.y,time:elapsed,state:e.state,
-    propelType:e.propelType,molePeekTimer:e.molePeekTimer,
-    molePeekPeriod:e.molePeekPeriod,facingLeft:e.facingLeft
-  }))return;
   if(e.enemyType===0)drawImageMap(467,screen.x,screen.y,new Set(),Math.floor(elapsed*20));
   else if(e.enemyType===2){
     const bodyFrame=e.state===0?Math.floor(elapsed*1000/150)%4:0;
-    drawImageMap(504,screen.x,screen.y,new Set(),bodyFrame);
     if(e.state!==0){
-      const peekY=(e.molePeekTimer*61)/Math.max(1,e.molePeekPeriod);
+      const peekY=Math.trunc((e.molePeekTimer*61)/Math.max(1,e.molePeekPeriod));
       // Original l.java clips the peeking face at the mole's centre line.
       ctx.save();ctx.beginPath();ctx.rect(0,0,W,clamp(screen.y,0,H));ctx.clip();
       drawImageMap(e.facingLeft?189:194,screen.x,screen.y+61-peekY);
       ctx.restore();
     }
+    drawImageMap(504,screen.x,screen.y,new Set(),bodyFrame);
   }else if(e.enemyType===1||e.enemyType===3){
     // The supplied runtime resolves these two legacy image IDs as the original
     // 20x20 invalid-resource checkerboard (drawImageRes handles IDs below zero).
@@ -842,9 +804,6 @@ function drawOriginalParallax(){
   const bonus=[4,9,14].includes(currentLevel.index);
   const top=bonus?'#b400bd':gradientColors[0],bottom=bonus?'#fd8c13':gradientColors[1];
   const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,top);bg.addColorStop(1,bottom);ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  // HD/Ultra: a continuous painted environment replaces the original
-  // repeatedly pasted low-resolution parallax sprites. Classic is identical.
-  if(window.BounceRemaster?.drawScenery?.(ctx,currentLevel.index,elapsed,cameraX,cameraY))return;
   for(const layer of layerState.layers){
     const group=layer.groupWidth;if(!group)continue;
     const xMotion=((cameraX+33000)*SCALE*layer.moveNum)/layer.moveDen;
@@ -919,13 +878,11 @@ function drawOriginalMenuBackground(){
 }
 function drawOriginalChapterBook(){
   drawOriginalMenuBackground();
-  if(!window.BounceRemaster?.drawChapterBook?.(ctx)){
-    drawImageMap(331,120,160);
-    ctx.fillStyle='#fbf7e7';ctx.fillRect(5,8,230,304);
-    const seam=ctx.createLinearGradient(116,0,124,0);
-    seam.addColorStop(0,'rgba(77,49,25,0)');seam.addColorStop(.5,'rgba(77,49,25,.16)');seam.addColorStop(1,'rgba(77,49,25,0)');
-    ctx.fillStyle=seam;ctx.fillRect(116,8,8,304);
-  }
+  drawImageMap(331,120,160);
+  ctx.fillStyle='#fbf7e7';ctx.fillRect(5,8,230,304);
+  const seam=ctx.createLinearGradient(116,0,124,0);
+  seam.addColorStop(0,'rgba(77,49,25,0)');seam.addColorStop(.5,'rgba(77,49,25,.16)');seam.addColorStop(1,'rgba(77,49,25,0)');
+  ctx.fillStyle=seam;ctx.fillRect(116,8,8,304);
 }
 function drawImageMapRotatedAtTopLeft(id,left,top,rotation,targetCtx=ctx){
   const exact=spriteCatalogue?.get(id),map=imageMaps?.maps?.[String(id)];
@@ -941,27 +898,20 @@ function drawOriginalTitleBook(){
   drawOriginalMenuBackground();
   // Dynamic sprite 332 is the original closed Bounce Tales book, including
   // its embossed sepia logo. Fill its transparent leather field first.
-  if(!window.BounceRemaster?.drawTitleBook?.(ctx)){
-    ctx.fillStyle='#644330';ctx.fillRect(4,4,208,298);
-    drawImageMap(332,120,160);
-    // Original borders and metallic hinges remain available in Classic mode.
-    ctx.strokeStyle='#55270f';ctx.lineWidth=1;ctx.strokeRect(3.5,3.5,209,300);ctx.strokeRect(4.5,4.5,207,298);
-    ctx.strokeStyle='#371909';ctx.strokeRect(5.5,5.5,205,296);ctx.strokeRect(6.5,6.5,203,294);
-    drawImageMapRotatedAtTopLeft(12,147,1,-Math.PI/2);
-    drawImageMap(12,180,271);
-    drawImageMap(15,33,85);drawImageMap(15,33,235);
-  }
+  ctx.fillStyle='#644330';ctx.fillRect(4,4,208,298);
+  drawImageMap(332,120,160);
+  ctx.strokeStyle='#55270f';ctx.lineWidth=1;ctx.strokeRect(3.5,3.5,209,300);ctx.strokeRect(4.5,4.5,207,298);
+  ctx.strokeStyle='#371909';ctx.strokeRect(5.5,5.5,205,296);ctx.strokeRect(6.5,6.5,203,294);
+  drawImageMapRotatedAtTopLeft(12,147,1,-Math.PI/2);
+  drawImageMap(12,180,271);
+  drawImageMap(15,33,85);drawImageMap(15,33,235);
 }
 function menuRoundRect(x,y,w,h,r=0){ctx.beginPath();ctx.rect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
 function drawJ2MEPanel(x,y,w,h,fill='#4b260d',ornaments=true){
   ctx.save();ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);
   ctx.strokeStyle='#d2b477';ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1);
   if(imageMaps&&ornaments){
-    // The old wide sprite's opaque backing obscured titles in HD/Ultra.
-    // Keep the original in Classic while vector corner ornaments remain clear.
-    if(!window.BounceRemaster?.drawPanelOrnaments?.(ctx,x,y,w,h)){
-      drawImageMap(89,x+w/2,y+13);drawImageMap(89,x+w/2,y+h-13);
-    }
+    drawImageMap(89,x+w/2,y+13);drawImageMap(89,x+w/2,y+h-13);
   }
   ctx.restore();
 }
@@ -994,10 +944,8 @@ function canvasMenuListItem(label,y,action,index,options={}){
     // Original m.java places sprite 2 9 px before the label and sprite 326
     // 9 px after it, with a small opposing 0-5 px selection pulse.
     const left=labelLeft-19+pulse,right=labelRight+19-pulse;
-    if(!window.BounceRemaster?.drawSelectionArrows?.(ctx,left,right,centerY)){
-      drawImageMap(2,left,centerY);
-      drawImageMap(326,right,centerY);
-    }
+    drawImageMap(2,left,centerY);
+    drawImageMap(326,right,centerY);
   }
   menuText(label,x+w/2,y+h/2,size,color);
   if(!disabled)canvasMenuHits.push({x,y,w,h,action});
@@ -1135,9 +1083,6 @@ function drawHudNumber(value,x,y,pad=0){
   return cursor-x;
 }
 function drawOriginalGameplayHud(){
-  if(window.BounceRemaster?.drawRemadeHud?.(ctx,{
-    collected,total:eggs.length+enemies.length,seconds:playClock
-  }))return;
   // Direct port of the m.java HUD order: egg icon, collected/total digits,
   // slash, then a right-anchored clock with bitmap minute:second digits.
   ctx.save();ctx.globalAlpha=1;
@@ -1181,24 +1126,16 @@ function drawGameplayScene(){
       if(!item.enemy.dead)drawEnemy(item.enemy);
     }else if(item.type==='trampoline'){
       const t=item.trampoline,p=screenPoint(t);
-      if(!window.BounceRemaster?.drawRemadeTrampoline?.(ctx,{
-        x:p.x,y:p.y,imageId:t.imageId,frame:t.active?t.animFrame:0,active:t.active
-      }))drawImageMap(t.imageId,p.x,p.y,new Set(),t.active?t.animFrame:0);
+      drawImageMap(t.imageId,p.x,p.y,new Set(),t.active?t.animFrame:0);
     }else if(item.type==='water')drawWater(item.water);
     else if(item.type==='friend'){
       const p=screenPoint(getWorldPos(item.object));
-      if(!window.BounceRemaster?.drawRemadeFriend?.(ctx,{x:p.x,y:p.y,time:elapsed})){
-        ctx.fillStyle='#ED1C24';ctx.beginPath();
-        ctx.arc(p.x,p.y,Math.round(20*SCALE),0,Math.PI*2);ctx.fill();
-      }
+      ctx.fillStyle='#ED1C24';ctx.beginPath();
+      ctx.arc(p.x,p.y,Math.round(20*SCALE),0,Math.PI*2);ctx.fill();
     }else if(item.type==='cannon')drawCannon(item.cannon);
   }
   for(const e of bonusEggs){if(!e.collected){const p=screenPoint(e);drawImageMap(208,p.x,p.y);}}
-  window.BounceRemaster?.finishScene?.(ctx,currentLevel.index,elapsed);
-  particles.draw(ctx,screenPoint,SCALE,(id,x,y,frame)=>{
-    if(!window.BounceRemaster?.drawRemadeFragment?.(ctx,id,x,y,frame))
-      drawImageMap(id,x,y,new Set(),frame,ctx);
-  });
+  particles.draw(ctx,screenPoint,SCALE,(id,x,y,frame)=>drawImageMap(id,x,y,new Set(),frame,ctx));
   // A paused/finished/confirming scene is a frozen picture: the active
   // dialogue must not paint behind a modal menu and obscure its options.
   if(mode===S.play){

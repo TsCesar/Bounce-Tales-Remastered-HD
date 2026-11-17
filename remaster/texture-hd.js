@@ -5,7 +5,8 @@
   'use strict';
   const remaster=window.BounceRemaster;
   if(!remaster)return;
-  const VERSION=4;
+  const VERSION=5;
+  const SPRITE_COUNT=348;
   const smallDevice=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
   // Mobile WebViews get an independently baked 2x atlas. 4x remains on PC.
   // This reduces atlas surface area and decoded texture memory on phones.
@@ -20,16 +21,15 @@
 
   remaster.drawSprite=(spriteId,x,y,ctx)=>{
     if(remaster.quality==='classic'||!manifest||!ctx||
-       !Number.isInteger(spriteId)||spriteId<0||spriteId>325)return false;
+       !Number.isInteger(spriteId)||spriteId<0)return false;
     const sprite=manifest.sprites[String(spriteId)];
     if(!sprite)return false;
     const image=pages[sprite.page];
     if(!image||!image.complete||!image.naturalWidth)return false;
-    // Small UI/characters use nearest neighbour; large scenery uses carefully
-    // alpha-aware precomputed interpolation. No global blur on the game canvas.
+    // The atlas already contains the mild interpolation for large sprites.
     ctx.save();
     ctx.imageSmoothingEnabled=sprite.sampling==='smooth';
-    if(sprite.sampling==='smooth')ctx.imageSmoothingQuality='high';
+    if(sprite.sampling==='smooth')ctx.imageSmoothingQuality='low';
     ctx.drawImage(image,sprite.x,sprite.y,sprite.w,sprite.h,
       Math.round(x-sprite.originX),Math.round(y-sprite.originY),
       sprite.logicalW,sprite.logicalH);
@@ -39,12 +39,12 @@
 
   async function load(){
     try{
-      const response=await fetch(atlasRoot+'manifest.json?v=8',{cache:'no-store'});
+      const response=await fetch(atlasRoot+'manifest.json?v=9',{cache:'no-store'});
       if(!response.ok)throw new Error('Manifest HTTP '+response.status);
       const next=await response.json();
-      if(next.version!==VERSION||next.spriteCount!==326||next.scale!==expectedScale||
+      if(next.version!==VERSION||next.spriteCount!==SPRITE_COUNT||next.scale!==expectedScale||
          !Array.isArray(next.pages)||!next.pages.length||
-         Object.keys(next.sprites||{}).length!==326)throw Error('Invalid HD sprite manifest');
+         Object.keys(next.sprites||{}).length!==SPRITE_COUNT)throw Error('Invalid HD sprite manifest');
       for(const value of Object.values(next.sprites))
         if(!['pixel','smooth'].includes(value.sampling)||
             !Number.isInteger(value.page)||value.page<0||value.page>=next.pages.length)
@@ -58,7 +58,7 @@
           if(loaded===pages.length)state='ready';
         };
         image.onerror=()=>{state='partial';console.warn('Using original sprite for missing atlas:',filename);};
-        image.src=atlasRoot+encodeURIComponent(filename)+'?v=8';
+        image.src=atlasRoot+encodeURIComponent(filename)+'?v=9';
         return image;
       });
     }catch(error){

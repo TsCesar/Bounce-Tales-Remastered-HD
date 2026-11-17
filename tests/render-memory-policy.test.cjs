@@ -41,6 +41,12 @@ function ensureBounded(mobile){
     'Large high-DPI screens must not create giant framebuffers');
   assert.ok(canvas.width<=2800&&canvas.height<=2800);
   assert.ok(canvas.width>=240&&canvas.height>=320);
+  canvas.getBoundingClientRect=()=>fakeRect(360,480);
+  box.context.devicePixelRatio=1;
+  api.setQuality('hd');api.beginFrame(ctx,canvas);
+  const hdWidth=canvas.width;
+  api.setQuality('ultra');api.beginFrame(ctx,canvas);
+  assert.ok(canvas.width>hdWidth,'Ultra samples more pixels on a standard screen');
   api.setQuality('classic');api.beginFrame(ctx,canvas);
   assert.equal(canvas.width,240);
   assert.equal(canvas.height,320);
@@ -50,20 +56,33 @@ async function checkTextures(mobile){
   const box=fixture(mobile);
   box.context.BounceRemaster={quality:'hd'};
   const expectedScale=mobile?2:4,folder=mobile?'mobile':'hd';
-  const sprites=Object.fromEntries(Array.from({length:326},(_,id)=>[
+  const map=require('../src/image-map.json').maps;
+  const ids=Object.keys(map).filter(id=>map[id].type==='simple');
+  const sprites=Object.fromEntries(ids.map(id=>[
     String(id),{page:0,x:0,y:0,w:expectedScale,h:expectedScale,
       logicalW:1,logicalH:1,originX:0,originY:0,sampling:'pixel'}
   ]));
   box.context.fetch=async (url)=>{
-    assert.ok(url.includes('assets/'+folder+'/manifest.json?v=8'));
-    return {ok:true,json:async()=>({version:4,scale:expectedScale,
-      spriteCount:326,pages:['hd-00.png'],sprites})};
+    assert.ok(url.includes('assets/'+folder+'/manifest.json?v=9'));
+    return {ok:true,json:async()=>({version:5,scale:expectedScale,
+      spriteCount:ids.length,pages:['hd-00.png'],sprites})};
   };
   box.run('remaster/texture-hd.js');
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(box.context.BounceRemaster.textureStatus().atlasScale,expectedScale);
-  assert.ok(box.requests.some(url=>url.includes('assets/'+folder+'/hd-00.png?v=8')));
+  assert.ok(box.requests.some(url=>url.includes('assets/'+folder+'/hd-00.png?v=9')));
   assert.equal(box.images.length,1,'Only the appropriate atlas profile loads');
+  const api=box.context.BounceRemaster;
+  const draws=[];
+  const ctx={save(){},restore(){},drawImage(...args){draws.push(args.slice(5));}};
+  assert.equal(api.drawSprite(388,120,160,ctx),false,'Original sprites draw while the atlas loads');
+  box.images[0].complete=true;
+  box.images[0].naturalWidth=2048;
+  box.images[0].onload();
+  assert.equal(api.drawSprite(388,120,160,ctx),true,'Dynamic original backdrop descriptors use the atlas');
+  assert.deepEqual(draws,[[120,160,1,1]]);
+  api.quality='classic';
+  assert.equal(api.drawSprite(388,120,160,ctx),false);
 }
 function checkScenery(mobile){
   const box=fixture(mobile);

@@ -45,12 +45,4 @@ sandbox.window.BounceRemaster.quality='classic';
 for(const id of family)assert.equal(
   art.drawRemadeGroundTile(mock().ctx,id,100,150,imageMap[String(id)]),false,
   'Classic must preserve exact J2ME art for '+id);
-const game=fs.readFileSync('game.js','utf8');
-const html=fs.readFileSync('index.html','utf8');
-const sw=fs.readFileSync('sw.js','utf8');
-const book=fs.readFileSync('remaster/book.js','utf8');
-assert.match(game,/BounceRemaster\?\.drawRemadeGroundTile\?\.\(ctx,id,x,y,imageMaps\.maps\[String\(id\)\]\)/);
-assert.match(html,/remaster\/tiles\.js\?v=17/);
-assert.match(sw,/remaster\/tiles\.js\?v=17/);
-assert.match(book,/api.drawTitleBook=drawTitleBook/);
 console.log('V17 ground remake: 35 source-backed tiles, precise anchors, classic fallback and untouched collision IDs verified.');

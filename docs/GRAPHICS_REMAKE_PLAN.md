@@ -1,4 +1,6 @@
-# Remake gráfico progresivo — plan de ejecución
+# Historial del remake gráfico progresivo
+
+La edición publicada desde `main` usa los sprites, fondos y animaciones de origen en Clásico, HD y Ultra. HD y Ultra amplían los recortes de los atlas originales. Los recortes pequeños conservan cada píxel y los grandes reciben un suavizado leve que conserva su transparencia y sus bordes.
 
 Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remake es visual: todos los niveles RLEF originales, física, colisiones, enemigos y scripts de eventos se conservan. Las ramas de destino siguen separadas: \`main\` motor compartido, \`web\`, \`android\` e \`ios\`.
 

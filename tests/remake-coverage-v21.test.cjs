@@ -47,12 +47,4 @@ assert.deepEqual(remaining,[],'Unremade original in-level sprites');
 assert.equal(used.size,89,'Source sprite audit baseline changed, re-audit all levels');
 assert.equal([...used.values()].reduce((a,b)=>a+b,0),4531,
   'RLEF sprite-placement baseline changed, re-audit all levels');
-const game=fs.readFileSync('game.js','utf8');
-const html=fs.readFileSync('index.html','utf8');
-const sw=fs.readFileSync('sw.js','utf8');
-assert.match(game,/BounceRemaster\?\.drawRemadeResidualSprite\?\.\(ctx,id,x,y,imageMaps.maps\[String\(id\)\]\)/);
-assert.match(html,/remaster\/residual\.js\?v=21/);
-assert.match(sw,/remaster\/residual\.js\?v=21/);
-assert.match(fs.readFileSync('remaster/book.js','utf8'),/api.drawTitleBook=drawTitleBook/);
-assert.match(fs.readFileSync('remaster/forms.js','utf8'),/art.drawRemadeForm=drawRemadeForm/);
 console.log('V21: all '+used.size+' direct RLEF sprite IDs across 15 levels / 4,531 placements have a remake rendering path.');

@@ -31,11 +31,9 @@ jobs:
         run: |
           npm run verify
           node --check remaster/remaster.js
-          node --check remaster/scenery.js
-          node --check remaster/materials.js
           node --check remaster/texture-hd.js
       - name: Comprobar compilacion del generador de texturas
-        run: python3 -m py_compile tools/build_hd_textures.py tools/build_hd_scenery.py
+        run: python3 -m py_compile tools/build_hd_textures.py tools/validate_hd_textures.py
       - name: Comprobar archivos de la version web
         shell: bash
         run: |
@@ -70,44 +68,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Generar todas las texturas HD del juego
+      - name: Generar y validar las texturas originales ampliadas
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check pillow numpy
+          python -m pip install --disable-pip-version-check pillow
           python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          root=Path('public/remaster/assets/hd')
-          m=json.loads((root/'manifest.json').read_text())
-          assert m['version']==4 and m['scale']==4
-          assert m['spriteCount']==326 and m['originalAtlases']==46
-          assert len(m['sprites'])==326 and len(m['pages'])>=1
-          assert sum(m['policyCounts'].values())==326
-          assert all(s['sampling'] in ('pixel','smooth') for s in m['sprites'].values())
-          assert all((root/name).is_file() for name in m['pages'])
-          print(f"Validated {len(m['sprites'])} clean sprites in {len(m['pages'])} pages")
-          PY
           python tools/validate_hd_textures.py --output public/remaster/assets/hd
           # Lightweight 2x sprites for small devices; validate individually.
           python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
           python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
-      - name: Generar los cuatro fondos retro cartoon HD
-        shell: bash
-        run: |
-          set -euo pipefail
-          python tools/build_hd_scenery.py --output public/remaster/assets/scenery
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('public/remaster/assets/scenery')
-          m=json.loads((p/'manifest.json').read_text())
-          assert m['version']==2 and m['style']=='cartoon-retro-hd' and m['width']==1200 and m['height']==1600
-          assert set(m['biomes'])=={'forest','lagoon','twilight','sunset'}
-          assert all((p/f).is_file() and (p/f).stat().st_size>1000 for f in m['biomes'].values())
-          print('Validated all 4 hand-painted retro cartoon biomes')
-          PY
       # Requiere habilitar Settings > Pages > Source: GitHub Actions
       # El GITHUB_TOKEN no tiene permisos para crear el sitio Pages.
       - name: Configurar GitHub Pages

@@ -55,14 +55,4 @@ for(const fn of [()=>art.drawRemadeTrampoline(mock().ctx,{x:0,y:0,imageId:497}),
   ()=>art.drawRemadeFriend(mock().ctx,{x:0,y:0})]){
   assert.equal(fn(),false,'Classic path must keep original art');
 }
-const game=fs.readFileSync('game.js','utf8');
-const page=fs.readFileSync('index.html','utf8');
-const book=fs.readFileSync('remaster/book.js','utf8');
-const forms=fs.readFileSync('remaster/forms.js','utf8');
-for(const method of ['drawRemadeCannon','drawRemadeTrampoline','drawRemadeFriend','drawRemadeEnemy']){
-  assert.ok(game.includes('BounceRemaster?.'+method+'?.('),'unwired '+method);
-}
-assert.ok(page.includes('remaster/props.js?v=16'));
-assert.match(book,/api.drawTitleBook=drawTitleBook/);
-assert.match(forms,/art.drawRemadeForm=drawRemadeForm/);
 console.log('V15 vector props: all 3 spring families, 4 enemy classes, aimed cannon, NPC, classic fallback OK.');
