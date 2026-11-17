@@ -93,7 +93,7 @@
   function drawBounce(ctx,p){
     // Gentle arcade colour bands, not glossy PBR. Bumpy/Wolly keep their own
     // original animations, and no physics or hitboxes are modified.
-    if(quality==='classic'||!p||p.r<=0||p.form!==0)return;
+    if(quality==='classic'||!p||p.r<=0||p.form !== 0)return;
     const r=p.r;
     ctx.save();
     ctx.translate(p.x,p.y);
