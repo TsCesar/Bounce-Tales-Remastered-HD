@@ -233,7 +233,7 @@ function buildRuntime(parsed){
       const p=getWorldPos(o);renderObjects.push({type:'friend',object:o,point:p});
     }
   }
-  rockBreakRuntime=new BounceRockBreak.RockBreak(parsed.objects,{imageMaps,scale:SCALE});
+  rockBreakRuntime=typeof BounceRockBreak!=='undefined'?new BounceRockBreak.RockBreak(parsed.objects,{imageMaps,scale:SCALE}):null;
   collected=0;elapsed=0;playClock=0;victoryTimer=0;deathAnimationElapsed=0;completionResult=null;particles.clear();
   spriteAnimations.clear();fieldMessage='';fieldMessageTimer=0;activeStoryMessage=null;storyMessageQueue=[];
   cameraSpring=new BounceOriginalCamera.CameraSpring(body.x,body.y+96,{width:W,height:H,scale:SCALE});
