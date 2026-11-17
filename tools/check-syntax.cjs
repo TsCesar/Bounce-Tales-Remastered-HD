@@ -4,7 +4,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const files = ['game.js', 'sw.js'];
-for (const directory of ['src', 'tests', 'tools']) {
+for (const directory of ['src', 'tests', 'tools', 'remaster']) {
   for (const name of fs.readdirSync(path.join(root, directory))) {
     if (name.endsWith('.js') || name.endsWith('.cjs')) files.push(path.join(directory, name));
   }

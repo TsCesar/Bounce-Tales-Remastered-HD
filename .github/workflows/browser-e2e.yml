@@ -1,0 +1,56 @@
+name: Auditoría E2E de gráficos y jugabilidad (Chromium)
+
+on:
+  push:
+    branches: [web]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    if: github.ref == 'refs/heads/web'
+    name: Comprobar navegador desktop, retina y móvil
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar Playwright Chromium y generadores
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          python -m pip install --disable-pip-version-check pillow numpy
+      - name: Generar recursos para navegador
+        run: |
+          node tools/build_mobile_web.cjs
+          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
+          python tools/validate_hd_textures.py --output public/remaster/assets/hd
+          python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
+          python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
+          python tools/build_hd_scenery.py --output public/remaster/assets/scenery
+          node tools/verify_mobile_bundle.cjs
+      - name: Probar Chromium desktop y móvil contra la web compilada
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --bind 127.0.0.1 --directory public > browser-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          node tools/browser-smoke.cjs
+      - name: Subir capturas y diagnóstico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bounce-Tales-Chromium-E2E-screenshots
+          path: |
+            artifacts/browser/
+            browser-server.log
+          if-no-files-found: warn
+          retention-days: 30
