@@ -615,31 +615,28 @@ function drawWater(zone){
   const o=zone.object,m=world.get(o.id)||zone.matrix;if(!m)return;
   const left=BounceOriginalWater.worldPoint(m,o.areaMinX,o.areaMinY),right=BounceOriginalWater.worldPoint(m,o.areaMaxX,o.areaMinY);
   const lowerRight=BounceOriginalWater.worldPoint(m,o.areaMaxX,o.areaMaxY),lowerLeft=BounceOriginalWater.worldPoint(m,o.areaMinX,o.areaMaxY);
-  const sl=screenPoint(left),sr=screenPoint(right),br=screenPoint(lowerRight),bl=screenPoint(lowerLeft);
+  const sl=screenPoint(left),br=screenPoint(lowerRight),bl=screenPoint(lowerLeft);
   const wave=zone.region===1?0:1;
-  const surface=[sl];
+  ctx.beginPath();ctx.moveTo(sl.x,sl.y);
   const steps=18;
   for(let i=1;i<=steps;i++){
     const t=i/steps,x=left.x+(right.x-left.x)*t;
     let ripple=0;
     for(const r of zone.ripples){const dx=x-r.x;const radius=60+r.age*150;if(Math.abs(dx)<radius)ripple+=Math.sin(dx*.18-r.age*13)*r.amplitude*(1-r.age/r.life);}
     const point=BounceOriginalWater.worldPoint(m,o.areaMinX+(o.areaMaxX-o.areaMinX)*t,o.areaMinY+ripple*wave);
-    surface.push(screenPoint(point));
+    const sp=screenPoint(point);ctx.lineTo(sp.x,sp.y);
   }
-  ctx.beginPath();ctx.moveTo(sl.x,sl.y);
-  for(const point of surface.slice(1))ctx.lineTo(point.x,point.y);
   ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);ctx.closePath();
   ctx.fillStyle=zone.isAirTunnel?'rgba(8,12,17,.28)':'rgba(17,17,238,.27)';ctx.fill();
-  window.BounceRemaster?.drawWaterSurface?.(ctx,{surface,left:sl,right:sr,bottomLeft:bl,bottomRight:br,time:elapsed,airTunnel:zone.isAirTunnel});
+  window.BounceRemaster?.drawWaterSurface?.(ctx,{left:sl,right:screenPoint(right),bottomLeft:bl,bottomRight:br,time:elapsed,airTunnel:zone.isAirTunnel});
   if(!zone.isAirTunnel&&zone.region===0){
     ctx.beginPath();
-    // The source outline applies the ripple at both shores, while the fill
-    // starts at the unperturbed left corner.
-    let leftRipple=0;
-    for(const r of zone.ripples){const dx=left.x-r.x;const range=60+r.age*150;if(Math.abs(dx)<range)leftRipple+=Math.sin(dx*.18-r.age*13)*r.amplitude*(1-r.age/r.life);}
-    const edge=screenPoint(BounceOriginalWater.worldPoint(m,o.areaMinX,o.areaMinY+leftRipple));
-    ctx.moveTo(edge.x,edge.y);
-    for(const point of surface.slice(1))ctx.lineTo(point.x,point.y);
+    for(let i=0;i<=steps;i++){
+      const t=i/steps,x=left.x+(right.x-left.x)*t;let ripple=0;
+      for(const r of zone.ripples){const dx=x-r.x,range=60+r.age*150;if(Math.abs(dx)<range)ripple+=Math.sin(dx*.18-r.age*13)*r.amplitude*(1-r.age/r.life);}
+      const p=BounceOriginalWater.worldPoint(m,o.areaMinX+(o.areaMaxX-o.areaMinX)*t,o.areaMinY+ripple),sp=screenPoint(p);
+      if(i===0)ctx.moveTo(sp.x,sp.y);else ctx.lineTo(sp.x,sp.y);
+    }
     ctx.strokeStyle='rgba(175,231,255,.58)';ctx.lineWidth=1;ctx.stroke();
   }
   for(const bubble of zone.bubbles){
