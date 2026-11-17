@@ -33,13 +33,12 @@
     ctx.save();
     // Single smooth leather material in place of the low-resolution dynamic
     // book sprite. Decorative drawing is vector, NOT scaled old bitmaps.
-    ctx.shadowColor='rgba(0,0,0,.53)';ctx.shadowBlur=13;ctx.shadowOffsetX=3;ctx.shadowOffsetY=4;
+    ctx.shadowColor='rgba(0,0,0,.24)';ctx.shadowBlur=4;ctx.shadowOffsetX=2;ctx.shadowOffsetY=3;
     round(ctx,4,4,208,299,7);ctx.fillStyle='#1d1011';ctx.fill();
     ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
     const leather=ctx.createLinearGradient(4,5,212,303);
-    leather.addColorStop(0,'#986a3f');leather.addColorStop(.16,'#6f4027');
-    leather.addColorStop(.47,'#563020');leather.addColorStop(.76,'#4a261c');
-    leather.addColorStop(1,'#301712');
+    leather.addColorStop(0,'#99673E');leather.addColorStop(.50,'#79502F');
+    leather.addColorStop(1,'#5D3928');
     round(ctx,6,5,205,297,5);ctx.fillStyle=leather;ctx.fill();
     // Gold-stamped binding / subtle spine, kept out of text hitboxes.
     const spine=ctx.createLinearGradient(7,0,26,0);
@@ -67,8 +66,8 @@
     for(const y of [85,232]){
       ctx.fillStyle='#42281e';round(ctx,5,y-12,31,24,5);ctx.fill();
       const brass=ctx.createLinearGradient(5,y-10,35,y+10);
-      brass.addColorStop(0,'#f9dca1');brass.addColorStop(.45,'#a7793d');
-      brass.addColorStop(1,'#d2aa6e');
+      brass.addColorStop(0,'#F5D78F');brass.addColorStop(.50,'#D2AD67');
+      brass.addColorStop(1,'#A87D46');
       ctx.fillStyle=brass;round(ctx,8,y-8,24,16,4);ctx.fill();
       ctx.fillStyle='#513323';ctx.beginPath();ctx.arc(18,y,3.5,0,PI*2);ctx.fill();
       ctx.fillStyle='rgba(255,248,204,.7)';ctx.beginPath();
@@ -80,7 +79,7 @@
   function drawChapterBook(ctx){
     if(api.quality==='classic')return false;
     ctx.save();
-    ctx.shadowColor='rgba(0,0,0,.46)';ctx.shadowBlur=9;ctx.shadowOffsetX=2;ctx.shadowOffsetY=4;
+    ctx.shadowColor='rgba(0,0,0,.23)';ctx.shadowBlur=4;ctx.shadowOffsetX=2;ctx.shadowOffsetY=3;
     round(ctx,4,6,232,305,5);ctx.fillStyle='#3f2217';ctx.fill();
     ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
     // Both pages are original coordinate size and get real vector edges.

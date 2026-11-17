@@ -90,99 +90,49 @@
   }
   api.beginFrame = beginFrame;
 
-  function drawBounce(ctx, p) {
-    // Never cover Bumpy's 32-frame rocky sprite or Wolly's 6 coloured arcs
-    // with the red-ball material overlay: each form has distinct art.
-    if (quality === 'classic' || !p || p.r <= 0 || p.form !== 0) return;
-    const r = p.r;
+  function drawBounce(ctx,p){
+    // Gentle arcade colour bands, not glossy PBR. Bumpy/Wolly keep their own
+    // original animations, and no physics or hitboxes are modified.
+    if(quality==='classic'||!p||p.r<=0||p.form!==0)return;
+    const r=p.r;
     ctx.save();
-    ctx.translate(p.x, p.y);
-    const stretch = p.stretch || [];
-    const n = stretch.length === 4 ?
-      Math.max(-0.09, Math.min(0.09, ((stretch[0] + stretch[2]) - (stretch[1] + stretch[3])) / Math.max(r * 40, 1))) : 0;
-    ctx.scale(1 + n, 1 - n);
-    // The old form and collision silhouette remain; the new material fits INSIDE them.
-    const inner = p.form === 0 ? 0.89 : 0.80;
-    const rx = r * inner, ry = r * inner;
+    ctx.translate(p.x,p.y);
     ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
+    ctx.ellipse(0,0,r*.9,r*.9,0,0,TAU);
     ctx.clip();
-    if (p.form === 0) {
-      const surface = ctx.createRadialGradient(-r * .38, -r * .46, r * .04, r * .15, r * .20, r * 1.32);
-      surface.addColorStop(0, '#ffbc9d');
-      surface.addColorStop(.12, '#f95547');
-      surface.addColorStop(.35, '#ee1c26');
-      surface.addColorStop(.7, '#aa101c');
-      surface.addColorStop(1, '#28070e');
-      ctx.fillStyle = surface;
-      ctx.fillRect(-r, -r, r * 2, r * 2);
-    } else {
-      const shade = ctx.createLinearGradient(-r, -r, r, r);
-      shade.addColorStop(0, 'rgba(255,255,255,.4)');
-      shade.addColorStop(.43, 'rgba(255,255,255,.06)');
-      shade.addColorStop(1, 'rgba(0,0,0,.52)');
-      ctx.fillStyle = shade;
-      ctx.fillRect(-r, -r, 2*r, 2*r);
-    }
-    const lustre = ctx.createRadialGradient(-r * .35, -r * .58, 0, -r * .35, -r * .58, r * .62);
-    lustre.addColorStop(0, 'rgba(255,255,255,.39)');
-    lustre.addColorStop(.25, 'rgba(255,255,255,.12)');
-    lustre.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = lustre;
-    ctx.fillRect(-r, -r, r * 2, r * 2);
-    if (quality === 'ultra') {
-      ctx.lineWidth = Math.max(.25, r * .025);
-      ctx.strokeStyle = 'rgba(255,245,237,.21)';
-      ctx.beginPath();
-      ctx.arc(-r * .03, -r * .03, r * .7, Math.PI * 1.15, Math.PI * 1.81);
-      ctx.stroke();
-      const bounceShine = Math.sin(p.rotation * .7);
-      ctx.fillStyle = 'rgba(255,255,255,.17)';
-      ctx.beginPath();
-      ctx.ellipse(-r * .30 + bounceShine * r * .07, -r * .53, r * .19, r * .065, -.5, 0, TAU);
-      ctx.fill();
-    }
+    const red=ctx.createLinearGradient(-r,-r,r,r);
+    red.addColorStop(0,'#ff7770');
+    red.addColorStop(.42,'#f33139');
+    red.addColorStop(1,'#b81a2a');
+    ctx.fillStyle=red;
+    ctx.fillRect(-r,-r,r*2,r*2);
+    ctx.fillStyle='rgba(255,202,172,.23)';
+    ctx.beginPath();
+    ctx.ellipse(-r*.30,-r*.40,r*.35,r*.24,-.48,0,TAU);
+    ctx.fill();
     ctx.restore();
   }
   api.drawBounce = drawBounce;
 
-  function drawEgg(ctx, x, y, seconds) {
-    if (quality === 'classic') return false;
-    const pulse = .89 + .11 * Math.cos(seconds * 3 + x * .05);
+  function drawEgg(ctx,x,y,seconds){
+    if(quality==='classic')return false;
     ctx.save();
-    ctx.translate(x, y);
-    const halo = ctx.createRadialGradient(0, 0, 1, 0, 0, 18);
-    halo.addColorStop(0, 'rgba(255,222,117,.34)');
-    halo.addColorStop(1, 'rgba(255,219,70,0)');
-    ctx.fillStyle = halo;
-    ctx.fillRect(-18, -18, 36, 36);
-    ctx.scale(pulse, pulse);
+    ctx.translate(x,y);
+    // Small, flat gold egg — no metallic glare, volumetric halo or caustics.
+    const pulse=1+Math.sin(seconds*2.7+x*.03)*.025;
+    ctx.scale(pulse,pulse);
     ctx.beginPath();
-    ctx.moveTo(0, -11);
-    ctx.bezierCurveTo(7, -11, 9, -3, 9, 2);
-    ctx.bezierCurveTo(9, 9, 5, 12, 0, 12);
-    ctx.bezierCurveTo(-5, 12, -9, 9, -9, 2);
-    ctx.bezierCurveTo(-9, -3, -7, -11, 0, -11);
+    ctx.moveTo(0,-11);
+    ctx.bezierCurveTo(7,-11,9,-3,9,2);
+    ctx.bezierCurveTo(9,9,5,12,0,12);
+    ctx.bezierCurveTo(-5,12,-9,9,-9,2);
+    ctx.bezierCurveTo(-9,-3,-7,-11,0,-11);
     ctx.closePath();
-    const metal = ctx.createLinearGradient(-9, -9, 9, 12);
-    metal.addColorStop(0, '#fff9ca');
-    metal.addColorStop(.24, '#ffdf60');
-    metal.addColorStop(.48, '#f4a92e');
-    metal.addColorStop(.7, '#c97918');
-    metal.addColorStop(1, '#713e13');
-    ctx.fillStyle = metal;
+    ctx.fillStyle='#F9CA45';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(91,45,9,.8)';
-    ctx.lineWidth = .6;
-    ctx.stroke();
-    const shine = ctx.createRadialGradient(-3, -5, 0, -2, -4, 9);
-    shine.addColorStop(0, 'rgba(255,255,255,.9)');
-    shine.addColorStop(.25, 'rgba(255,255,255,.29)');
-    shine.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = shine;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 8.5, 11, 0, 0, TAU);
-    ctx.fill();
+    ctx.lineWidth=.8;ctx.strokeStyle='#986322';ctx.stroke();
+    ctx.fillStyle='#FFE89C';
+    ctx.beginPath();ctx.ellipse(-2.6,-4.8,2.7,4.1,-.27,0,TAU);ctx.fill();
     ctx.restore();
     return true;
   }
@@ -190,86 +140,23 @@
 
   // Terrain materials are drawn ONLY inside the existing triangle mesh.
   // No edge positions, object transforms or hitboxes are modified.
-  function drawTerrain(ctx, poly, screenPoint) {
-    if (quality === 'classic' || !poly || !poly.faces || !poly.vertices) return;
-    const vs = poly.vertices, faces = poly.faces;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    const triangles = [];
-    for (let i = 0; i + 2 < faces.length; i += 3) {
-      const va = vs[faces[i]], vb = vs[faces[i + 1]], vc = vs[faces[i + 2]];
-      if (!va || !vb || !vc) continue;
-      const a = screenPoint(va), b = screenPoint(vb), c = screenPoint(vc);
-      for (const pt of [a, b, c]) {
-        minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
-        maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
-      }
-      triangles.push([a, b, c]);
-    }
-    if (!triangles.length || maxX < -5 || minX > WORLD_W + 5 ||
-        maxY < -5 || minY > WORLD_H + 5 || maxY - minY < .02) return;
-    ctx.save();
-    ctx.beginPath();
-    for (const [a,b,c] of triangles) {
-      ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();
-    }
-    ctx.clip();
-    const height = Math.max(1, maxY - minY);
-    const material = ctx.createLinearGradient(minX, minY, minX + (maxX-minX) * .1, minY + height);
-    material.addColorStop(0, 'rgba(250,255,218,.40)');
-    material.addColorStop(.16, 'rgba(255,247,196,.18)');
-    material.addColorStop(.55, 'rgba(25,28,25,.03)');
-    material.addColorStop(1, 'rgba(5,16,18,.38)');
-    ctx.fillStyle = material;
-    ctx.fillRect(minX,minY,maxX-minX,height);
-    if (quality === 'ultra') {
-      // Surface relief lines are screen-space decoration, never collision geometry.
-      const edge = Math.max(.22, Math.min(1.1, height / 80));
-      for (const [a,b,c] of triangles) {
-        const pts = [a,b,c];
-        ctx.strokeStyle = 'rgba(255,246,201,.10)';
-        ctx.lineWidth = edge;
-        ctx.beginPath();
-        for (let j=0; j<3; j++) {
-          const one=pts[j], two=pts[(j+1)%3];
-          if (Math.abs(one.y-two.y) < Math.abs(one.x-two.x)*.22) {
-            ctx.moveTo(one.x,one.y+.35);ctx.lineTo(two.x,two.y+.35);
-          }
-        }
-        ctx.stroke();
-      }
-      // Fine material variation, stable relative to the screen and subtly lit.
-      const step = 6;
-      ctx.fillStyle = 'rgba(255,255,245,.055)';
-      for (let j=Math.floor(minY/step)*step; j<=Math.min(maxY,WORLD_H);j+=step)
-        for(let i=Math.floor(minX/step)*step;i<=Math.min(maxX,WORLD_W);i+=step)
-          if (((i*37+j*19+poly.color) & 7) === 0) ctx.fillRect(i+.5,j+.6,.55,.42);
-    }
-    ctx.restore();
+  function drawTerrain(ctx,poly,screenPoint){
+    // Safe original-colour fallback when optional materials.js is not loaded.
+    // With materials.js present, this function is replaced by cel shading.
   }
   api.drawTerrain = drawTerrain;
 
-  function finishScene(ctx, level, time) {
-    if (quality === 'classic') return;
-    ctx.save();
-    const biomes = level <= 4 ? ['rgba(255,244,187,.07)', 'rgba(116,205,255,.04)']
-      : level <= 9 ? ['rgba(166,255,224,.065)','rgba(78,156,176,.04)']
-      : ['rgba(246,190,255,.06)','rgba(92,64,255,.045)'];
-    ctx.globalCompositeOperation = 'screen';
-    const sun = ctx.createRadialGradient(35, 28, 2, 52, 64, 260);
-    sun.addColorStop(0, biomes[0]);
-    sun.addColorStop(.45, biomes[1]);
-    sun.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = sun;
-    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
-    if (quality === 'ultra') {
-      ctx.globalCompositeOperation = 'source-over';
-      const vignette = ctx.createRadialGradient(120, 148, 80, 120, 160, 250);
-      vignette.addColorStop(0,'rgba(0,0,0,0)');
-      vignette.addColorStop(1,'rgba(2,7,20,.09)');
-      ctx.fillStyle = vignette;
+  function finishScene(ctx,level,time){
+    if(quality==='classic')return;
+    // Almost invisible colour unity across layers. No vignette, bloom,
+    // photoreal post-processing or loss of enemy/platform contrast.
+    if(quality==='ultra'){
+      ctx.save();
+      ctx.fillStyle=level<=4?'rgba(235,251,203,.016)':
+        level<=9?'rgba(191,246,234,.016)':'rgba(228,204,255,.016)';
       ctx.fillRect(0,0,WORLD_W,WORLD_H);
+      ctx.restore();
     }
-    ctx.restore();
   }
   api.finishScene = finishScene;
 
