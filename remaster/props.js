@@ -156,6 +156,8 @@
     if(fraction<=0.015)return;
     ctx.save();ctx.beginPath();ctx.rect(-32,-56,64,48);ctx.clip();
     const rise=fraction*28;
+    // A continuous torso connects the head to the earth as the mole rises.
+    rounded(ctx,-14,-31-rise*.45,28,33,9,'#A98975','#795F63',1.2);
     ellipse(ctx,0,-14-rise,22,21,'#BB947C','#795F63',1.3);
     ellipse(ctx,-6,-18-rise,12,10,'#D8BA99');
     eyes(ctx,0,-22-rise,8,.73,true);
@@ -199,5 +201,5 @@
   art.drawRemadeCannon=drawRemadeCannon;
   art.drawRemadeFriend=drawRemadeFriend;
   art.drawRemadeEnemy=drawRemadeEnemy;
-  art.propArtVersion=15;
+  art.propArtVersion=16;
 })();
