@@ -1,0 +1,112 @@
+name: Crear apps Android e iOS (prototipos)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'tools/build_mobile_web.cjs'
+      - 'tools/build_hd_textures.py'
+      - 'tools/build_hd_scenery.py'
+      - 'remaster/**'
+      - 'src/**'
+      - 'assets/**'
+      - 'game.js'
+      - 'index.html'
+      - 'style.css'
+      - '.github/workflows/native-apps.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Compilar APK de pruebas Android 16 (API 36)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Preparar SDK Android 16
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Instalar herramientas de Capacitor
+        run: npm install --no-audit --no-fund
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Construir web local, texturas y fondos
+        run: |
+          python -m pip install --disable-pip-version-check pillow numpy
+          node tools/build_mobile_web.cjs
+          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
+          python tools/validate_hd_textures.py --output public/remaster/assets/hd
+          python tools/build_hd_scenery.py --output public/remaster/assets/scenery
+          test -f public/remaster/assets/scenery/forest.webp
+      - name: Generar proyecto Android nativo
+        run: |
+          npx cap add android
+          npx cap sync android
+          grep -q 'targetSdkVersion = 36' android/variables.gradle || grep -q 'targetSdkVersion = 36' android/app/build.gradle
+      - name: Compilar APK instalable de depuracion
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew --no-daemon --stacktrace assembleDebug
+      - name: Subir APK Android (instalable, no firmado para Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bounce-Tales-Android-debug-APK
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Subir proyecto Android Studio
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bounce-Tales-Android-Studio-project
+          path: |
+            android/
+            !android/.gradle/
+            !android/**/build/
+          if-no-files-found: error
+          retention-days: 30
+
+  ios:
+    name: Generar proyecto iOS (firma App Store pendiente)
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar Capacitor y recursos locales
+        run: |
+          npm install --no-audit --no-fund
+          python -m pip install --disable-pip-version-check pillow numpy
+          node tools/build_mobile_web.cjs
+          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
+          python tools/build_hd_scenery.py --output public/remaster/assets/scenery
+      - name: Generar proyecto de Xcode
+        run: |
+          npx cap add ios
+          npx cap sync ios
+          test -d ios/App
+      - name: Subir proyecto iOS listo para firmar en Xcode
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bounce-Tales-iOS-Xcode-project-unsigned
+          path: ios/
+          if-no-files-found: error
+          retention-days: 30

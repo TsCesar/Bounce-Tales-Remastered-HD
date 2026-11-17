@@ -1,0 +1,15 @@
+{
+  "appId": "com.tscesar.bouncetalesremastered",
+  "appName": "Bounce Tales Remastered",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#08131d",
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": false
+  },
+  "android": {
+    "backgroundColor": "#08131d",
+    "allowMixedContent": false
+  }
+}
