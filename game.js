@@ -51,6 +51,7 @@ const settingsLayer=document.getElementById('settings-layer');
 const status=document.getElementById('statusline'),eggHud=document.getElementById('egg-hud'),gameHint=document.getElementById('game-hint');
 const input=new BounceOriginalInput.OriginalInputState();
 let levelData=null,world=null,body=null,worldGeometry=[],renderObjects=[],eggs=[],enemies=[],waters=[],trampolines=[],cannons=[],bonusEggs=[];
+let rockBreakRuntime=null;
 let cannonState=null,cannonMesh=null,cannonMeshPromise=null;
 let currentLevel=LEVELS[0],levelLoadToken=0;
 let atlases=[],imageMaps=null,spriteCatalogue=null,loadedImages=new Map(),collected=0,elapsed=0,playClock=0,mode='title';
@@ -232,6 +233,7 @@ function buildRuntime(parsed){
       const p=getWorldPos(o);renderObjects.push({type:'friend',object:o,point:p});
     }
   }
+  rockBreakRuntime=new BounceRockBreak.RockBreak(parsed.objects,{imageMaps,scale:SCALE});
   collected=0;elapsed=0;playClock=0;victoryTimer=0;deathAnimationElapsed=0;completionResult=null;particles.clear();
   spriteAnimations.clear();fieldMessage='';fieldMessageTimer=0;activeStoryMessage=null;storyMessageQueue=[];
   cameraSpring=new BounceOriginalCamera.CameraSpring(body.x,body.y+96,{width:W,height:H,scale:SCALE});
@@ -242,6 +244,8 @@ function buildRuntime(parsed){
     onAnimate:id=>startSpriteAnimation(id),
     onFlagsChanged:(obj,flags)=>{const poly=worldGeometry.find(p=>p.id===obj.id);if(poly)poly.nocollide=(flags&0x20)!==0;},
     onOriginalSpriteEffect:obj=>{
+      // A pile already shattered by Bumpy must not emit a second fragment burst.
+      if(rockBreakRuntime?.isBroken(obj.id))return;
       const m=eventEngine?.objectWorld(obj.id)||world?.get(obj.id);if(!m)return;
       // r.java bounds for image 358 are [-36,96] × [-67,18] around the
       // sprite anchor; opcode 29 insets those bounds by 60 source units.
@@ -516,6 +520,14 @@ function update(dt,sourceDeltaMs=Math.round(dt*1000)){
   const waterRippleHeads=new Map(waters.map(zone=>[zone,zone.ripples[zone.ripples.length-1]||null]));
   body.update(dt,SCALE,sourceDeltaMs);
   if(body.enabled)updatePlayerEyes(dt);
+  // The original V62 rock piles are authored sprite families 357 and 358.
+  // Bumpy's impact shatters their visuals and produces original J2ME shards;
+  // the physics geometry and level scripts retain their authored behavior.
+  if(body.enabled)rockBreakRuntime?.update({body,previous:previousPosition,world,dt,
+    onBreak:({position})=>{
+      particles.emitOriginalSpriteFragments(position.x+24,position.x+36,position.y-7,position.y-42,24);
+    }
+  });
   // Level 1's polygon parent is visited before its trampoline child in
   // c.a(root), so resolve terrain before the spring's type-8 interaction.
   const terrainResult=body.enabled?resolveTerrain(dt,previousPosition,false):{contacts:0};
@@ -1098,7 +1110,9 @@ function drawGameplayScene(){
     if(flags&0x80)continue;
     if(item.type==='player')drawPlayer();
     else if(item.type==='geometry')drawGeometry(item.poly);
-    else if(item.type==='sprite')drawSprite(item.object,transformObject(item.object));
+    else if(item.type==='sprite'){
+      if(!rockBreakRuntime?.isBroken(item.object.id))drawSprite(item.object,transformObject(item.object));
+    }
     else if(item.type==='egg'){
       const p=screenPoint(getWorldPos(item.object));const e=eggs.find(x=>x.id===item.object.id);
       if(e&&!e.collected)drawImageMap(208,p.x,p.y);
@@ -1271,6 +1285,7 @@ function openGuide(){menuFocusIndex=0;mode=S.guide;hideGameScenes();document.get
 function startLevel(){
   mode=S.play;hideGameScenes();syncPauseButton();input.clear();lastTime=0;simulationClock.reset();renderAlpha=1;musicController?.playLevel(currentLevel.index);
   if(eventEngine){eventEngine.reset();world=eventEngine.world;refreshGeometryWorld(world);}
+  rockBreakRuntime?.reset();
   spriteAnimations.clear();fieldMessage='';fieldMessageTimer=0;activeStoryMessage=null;storyMessageQueue=[];cameraSnap=false;
   body.reset(spawn.x,spawn.y);body.enabled=true;body.visible=true;cannonState=null;BounceOriginalCannon.resetMesh(cannonMesh);cannons.forEach(BounceOriginalCannon.reset);if(gameHint)gameHint.textContent='Hold ◀ / ▶ to move · Hold JUMP to bounce';body.rotation=0;body.unlockedForme=progress.unlockedForme;body.forme=0;body.slopeCosAbs=1;body.eyeFrame=0;body.idleAnimStartTimer=3000;
   eggs.forEach(e=>e.collected=false);bonusEggs=[];collected=0;elapsed=0;playClock=0;checkpointPosition={x:spawn.x,y:spawn.y};
