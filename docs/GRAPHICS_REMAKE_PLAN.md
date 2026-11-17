@@ -41,15 +41,3 @@ El **modo Clásico** usa exactamente el render original. **HD/Ultra** dibujan nu
 - En cada revisión, comparar capturas; un test de integración correcto no sustituye una revisión visual en móvil.
 
 **Limitación actual:** V21 cubre los 89 IDs gráficos que aparecen directamente en los 15 archivos RLEF (incluidos signos compuestos y las dos formaciones de roca). Esto NO demuestra que todos los fotogramas de animación, elementos de menú o sprites usados por código estén redibujados, ni sustituye jugar manualmente los 15 capítulos en móviles reales. El libro y las tres formas V14 siguen intactos.
-
-## V22 — exactamente dos modos de imagen
-
-- **Clásico:** arte original y búfer de dibujo de 240 × 320, para comparar sin tocar jugabilidad ni menús.
-- **Remasterizado (único):** todas las formas y los assets vectoriales ya creados, fondo pintado, luz cartoon y lienzo de alta densidad de píxeles. El selector alterna solo estos dos estados.
-- Los ajustes anteriores de HD y Ultra se migran automáticamente al único modo Remasterizado al cargar la preferencia anterior.
-- Una bajada sostenida de FPS adapta solo la resolución interna con un mínimo de 84 % del objetivo; no cambia automáticamente al modo Clásico.
-- Los sprites de más de 14 × 14 píxeles que aún proceden del atlas reciben filtrado al renderizar; los detalles más pequeños conservan contornos definidos.
-- Mientras carga un fondo, se muestra una ilustración vectorial continua del mismo bioma en lugar de revelar tiras pixeladas antiguas.
-- El libro vectorial y las tres formas de Bounce no cambian de diseño.
-
-**Pendiente de certificación:** comparación visual manual de todos los niveles, análisis de latencia en dispositivos físicos y publicación comercial en tiendas. Una prueba de navegador correcta no sustituye estas verificaciones.

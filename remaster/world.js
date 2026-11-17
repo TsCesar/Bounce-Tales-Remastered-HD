@@ -32,23 +32,19 @@
     return [asHex,asHex];
   }
   function meshPath(ctx,verts,faces,screenPoint){
-    let valid=false;
+    let valid=0;
     ctx.beginPath();
-    const projected=verts.map(screenPoint);
     for(let i=0;i+2<faces.length;i+=3){
-      const a=projected[faces[i]],b=projected[faces[i+1]],c=projected[faces[i+2]];
+      const a=verts[faces[i]],b=verts[faces[i+1]],c=verts[faces[i+2]];
       if(!a||!b||!c)continue;
-      const area=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
-      if(!Number.isFinite(area)||area===0)continue;
-      // Fill the union of the triangles. Opposite windings in overlapping
-      // faces would otherwise cancel each other under Canvas's nonzero fill.
-      const second=area>0?b:c,third=area>0?c:b;
-      ctx.moveTo(a.x,a.y);
-      ctx.lineTo(second.x,second.y);ctx.lineTo(third.x,third.y);
-      ctx.closePath();
-      valid=true;
+      const s=[screenPoint(a),screenPoint(b),screenPoint(c)];
+      if(s.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))continue;
+      // A common fill across the whole mesh avoids per-triangle seams.
+      ctx.moveTo(s[0].x,s[0].y);
+      ctx.lineTo(s[1].x,s[1].y);ctx.lineTo(s[2].x,s[2].y);
+      ctx.closePath();valid++;
     }
-    return valid;
+    return valid>0;
   }
   function drawRemadeTerrain(ctx,poly,screenPoint){
     if(art.quality==='classic'||!poly?.vertices||!poly?.faces)return false;
