@@ -160,6 +160,46 @@ const scenarios=[
       fs.writeFileSync(path.join(screenshots,c.name+'-v17-ground-tiles.png'),
         Buffer.from(sheet.split(',')[1],'base64'));
     }
+    if(!c.mobile){
+      // A genuine Chromium canvas contact sheet for the remaining V19 art.
+      // It calls the exact functions used by gameplay, not separate mocks.
+      const sheet=await page.evaluate(async()=>{
+        const art=window.BounceRemaster;
+        const maps=(await (await fetch('src/image-map.json')).json()).maps;
+        const canvas=document.createElement('canvas');
+        canvas.width=1650;canvas.height=850;
+        const ctx=canvas.getContext('2d');ctx.scale(3,3);
+        ctx.fillStyle='#EAF0E9';ctx.fillRect(0,0,550,283);
+        ctx.fillStyle='#294A54';ctx.font='bold 12px system-ui';
+        ctx.fillText('V19 · ESTRUCTURAS / SEÑALES / HUD / FRAGMENTOS',15,19);
+        const ids=[130,131,132,176,177,178];
+        for(let i=0;i<ids.length;i++){
+          const id=ids[i],m=maps[String(id)],x=45+i*86,y=69;
+          if(!art.drawRemadeStructure(ctx,id,x,y,m))
+            throw Error('Missing structural vector '+id);
+          ctx.fillStyle='#284A55';ctx.font='9px system-ui';
+          ctx.fillText('ID '+id,x-12,87);
+        }
+        const signs=[152,153,154,243,244,245,246,247,248,249,250];
+        for(let i=0;i<signs.length;i++){
+          const id=signs[i],m=maps[String(id)];
+          const x=53+(i%6)*86,y=i<6?157:234;
+          if(!art.drawRemadeSign(ctx,id,x,y,m))
+            throw Error('Missing sign vector '+id);
+          ctx.fillStyle='#284A55';ctx.font='9px system-ui';
+          ctx.fillText('ID '+id,x-16,y+14);
+        }
+        if(!art.drawRemadeHud(ctx,{collected:14,total:28,seconds:153}))
+          throw Error('Missing HD HUD');
+        for(let i=0;i<3;i++){
+          if(!art.drawRemadeFragment(ctx,[390,396,414][i],230+i*13,259,1))
+            throw Error('Missing rock fragment '+i);
+        }
+        return canvas.toDataURL('image/png');
+      });
+      fs.writeFileSync(path.join(screenshots,c.name+'-v19-remaining-art.png'),
+        Buffer.from(sheet.split(',')[1],'base64'));
+    }
     const high=await page.evaluate(()=>({
       game:document.getElementById('game').width*document.getElementById('game').height,
       text:document.getElementById('game-text').width*document.getElementById('game-text').height
