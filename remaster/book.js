@@ -104,6 +104,26 @@
     ctx.restore();
     return true;
   }
+  // Original green arrows are tiny J2ME bitmaps; draw crisp, scalable
+  // selection markers in the same palette as the source in HD and Ultra.
+  function drawSelectionArrows(ctx,left,right,y){
+    if(api.quality==='classic')return false;
+    function marker(x,direction){
+      ctx.save();ctx.translate(x,y);ctx.scale(direction,1);
+      ctx.shadowColor='rgba(4,22,6,.4)';ctx.shadowBlur=1;
+      const light=ctx.createLinearGradient(-6,-7,6,6);
+      light.addColorStop(0,'#e7ff83');light.addColorStop(.52,'#78c528');
+      light.addColorStop(1,'#316f19');
+      ctx.beginPath();ctx.moveTo(-6,-6.5);ctx.lineTo(5.5,0);
+      ctx.lineTo(-6,6.5);ctx.lineTo(-3.3,0);ctx.closePath();
+      ctx.fillStyle=light;ctx.fill();
+      ctx.shadowBlur=0;ctx.lineWidth=.7;ctx.strokeStyle='#244a0d';ctx.stroke();
+      ctx.restore();
+    }
+    marker(left,1);marker(right,-1);
+    return true;
+  }
+  api.drawSelectionArrows=drawSelectionArrows;
   api.drawTitleBook=drawTitleBook;
   api.drawChapterBook=drawChapterBook;
 })();
