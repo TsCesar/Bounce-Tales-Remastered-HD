@@ -12,7 +12,7 @@ const scenarios=[
   {name:'touch-mobile',viewport:{width:390,height:844},dpr:2,mobile:true}
 ];
 (async()=>{
- const browser=await chromium.launch({headless:true,args:['--disable-dev-shm-usage']});
+ const browser=await chromium.launch({headless:true,executablePath:process.env.BOUNCE_CHROMIUM_PATH,args:['--disable-dev-shm-usage']});
  try{
   for(const c of scenarios){
    const context=await browser.newContext({viewport:c.viewport,
@@ -45,9 +45,19 @@ const scenarios=[
     assert.equal(info.atlasScale,c.mobile?2:4);
     assert.equal(info.scenery,0,'menu preloaded too many backgrounds');
     await page.screenshot({path:path.join(screenshots,c.name+'-title.png')});
-    await page.evaluate(()=>window.BounceRemaster.setQuality('classic'));
+    const choices=await page.evaluate(()=>window.BounceRemaster.qualityOptions);
+    assert.deepEqual(choices,['classic','remastered'],'there must be exactly two modes');
+    assert.equal(await page.evaluate(()=>window.BounceRemaster.quality),'remastered');
+    assert.equal(await page.evaluate(()=>window.BounceRemaster.setQuality('ultra')),false,
+      'Ultra is not a selectable graphics mode');
+    const qualityButton=page.locator('#remaster-toolbar [data-remaster-mode]');
+    assert.equal((await qualityButton.textContent()).trim(),'HD');
+    await qualityButton.click();
+    assert.equal((await qualityButton.textContent()).trim(),'ORIGINAL');
+    assert.equal(await page.evaluate(()=>window.BounceRemaster.quality),'classic');
     await page.waitForFunction(()=>document.getElementById('game').width===240);
-    await page.evaluate(()=>window.BounceRemaster.setQuality('ultra'));
+    await page.evaluate(()=>window.BounceRemaster.setQuality('remastered'));
+    assert.equal((await qualityButton.textContent()).trim(),'HD');
     await page.waitForTimeout(150);
     // Render the three new forms and the two destructible rock formations
     // using the SAME actual canvas renderer as gameplay (not mock drawings).
