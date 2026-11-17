@@ -15,8 +15,34 @@
   } catch (_) { /* Private browsing may block storage. */ }
   const api = { version: '1.0.0', get quality() { return quality; } };
   let toolbar = null;
-  const MAX_PIXELS = 4096;
+  const MAX_PIXELS = 2800;
   const TAU = Math.PI * 2;
+  let lastMeasuredFrame=0,slowFrames=0;
+  function renderingScale(cssW,cssH){
+    // Maintain aspect ratio and limit both texture dimensions and pixel area.
+    // These budgets are intentionally conservative for GPU-less WebViews.
+    const budget=coarse?1300000:3200000;
+    const deviceDpr=Math.max(1,Math.min(coarse?2:2.25,window.devicePixelRatio||1));
+    const requested=quality==='ultra'?deviceDpr:Math.min(deviceDpr,1.5);
+    return Math.min(requested,MAX_PIXELS/Math.max(cssW,cssH),
+      Math.sqrt(budget/Math.max(1,cssW*cssH)));
+  }
+  function trackFrames(){
+    if(typeof performance==='undefined'||typeof performance.now!=='function'||quality==='classic')return;
+    const now=performance.now();
+    if(lastMeasuredFrame&&now-lastMeasuredFrame<800&&
+       !(typeof document!=='undefined'&&document.hidden)){
+      const delta=now-lastMeasuredFrame;
+      slowFrames=delta>35?Math.min(150,slowFrames+2):Math.max(0,slowFrames-1);
+      // Quality adaptation does not alter the 60Hz fixed-step game simulation.
+      if(slowFrames>=120){
+        setQuality(quality==='ultra'?'hd':'classic');
+        slowFrames=0;
+        console.warn('Visual quality reduced to keep the game responsive');
+      }
+    }
+    lastMeasuredFrame=now;
+  }
 
   function setQuality(next) {
     if (!QUALITY.includes(next)) return;
@@ -46,11 +72,12 @@
     }
     const rect = canvas.getBoundingClientRect();
     const cssW = rect.width || WORLD_W, cssH = rect.height || WORLD_H;
-    const deviceDpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-    // Both visual modes render at the device's full pixel density, not a
-    // 72%-resolution bitmap stretched by CSS (the previous cause of blur).
-    const targetW = Math.min(MAX_PIXELS, Math.max(WORLD_W, Math.round(cssW * deviceDpr)));
-    const targetH = Math.min(MAX_PIXELS, Math.max(WORLD_H, Math.round(cssH * deviceDpr)));
+    trackFrames();
+    const scale=renderingScale(cssW,cssH);
+    // Constrain by total pixels, not just width/height separately; use the
+    // same scale on both axes to preserve camera/UI proportions.
+    const targetW = Math.max(WORLD_W, Math.round(cssW * scale));
+    const targetH = Math.max(WORLD_H, Math.round(cssH * scale));
     if (canvas.width !== targetW || canvas.height !== targetH) {
       canvas.width = targetW;
       canvas.height = targetH;

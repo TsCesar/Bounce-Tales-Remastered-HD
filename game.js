@@ -873,11 +873,13 @@ function drawOriginalMenuBackground(){
 }
 function drawOriginalChapterBook(){
   drawOriginalMenuBackground();
-  drawImageMap(331,120,160);
-  ctx.fillStyle='#fbf7e7';ctx.fillRect(5,8,230,304);
-  const seam=ctx.createLinearGradient(116,0,124,0);
-  seam.addColorStop(0,'rgba(77,49,25,0)');seam.addColorStop(.5,'rgba(77,49,25,.16)');seam.addColorStop(1,'rgba(77,49,25,0)');
-  ctx.fillStyle=seam;ctx.fillRect(116,8,8,304);
+  if(!window.BounceRemaster?.drawChapterBook?.(ctx)){
+    drawImageMap(331,120,160);
+    ctx.fillStyle='#fbf7e7';ctx.fillRect(5,8,230,304);
+    const seam=ctx.createLinearGradient(116,0,124,0);
+    seam.addColorStop(0,'rgba(77,49,25,0)');seam.addColorStop(.5,'rgba(77,49,25,.16)');seam.addColorStop(1,'rgba(77,49,25,0)');
+    ctx.fillStyle=seam;ctx.fillRect(116,8,8,304);
+  }
 }
 function drawImageMapRotatedAtTopLeft(id,left,top,rotation,targetCtx=ctx){
   const exact=spriteCatalogue?.get(id),map=imageMaps?.maps?.[String(id)];
@@ -893,18 +895,16 @@ function drawOriginalTitleBook(){
   drawOriginalMenuBackground();
   // Dynamic sprite 332 is the original closed Bounce Tales book, including
   // its embossed sepia logo. Fill its transparent leather field first.
-  ctx.fillStyle='#644330';ctx.fillRect(4,4,208,298);
-  drawImageMap(332,120,160);
-  // Double MIDP borders use the exact source colours and 240x320 geometry.
-  ctx.strokeStyle='#55270f';ctx.lineWidth=1;ctx.strokeRect(3.5,3.5,209,300);ctx.strokeRect(4.5,4.5,207,298);
-  ctx.strokeStyle='#371909';ctx.strokeRect(5.5,5.5,205,296);ctx.strokeRect(6.5,6.5,203,294);
-  // m.java draws the upper corner with transform 6 and the lower corner
-  // untransformed, both right/bottom anchored to the book bounds.
-  drawImageMapRotatedAtTopLeft(12,147,1,-Math.PI/2);
-  drawImageMap(12,180,271);
-  // The original left hinges use LEFT | VCENTER anchors (metadata origin 35,23).
-  drawImageMap(15,33,85);
-  drawImageMap(15,33,235);
+  if(!window.BounceRemaster?.drawTitleBook?.(ctx)){
+    ctx.fillStyle='#644330';ctx.fillRect(4,4,208,298);
+    drawImageMap(332,120,160);
+    // Original borders and metallic hinges remain available in Classic mode.
+    ctx.strokeStyle='#55270f';ctx.lineWidth=1;ctx.strokeRect(3.5,3.5,209,300);ctx.strokeRect(4.5,4.5,207,298);
+    ctx.strokeStyle='#371909';ctx.strokeRect(5.5,5.5,205,296);ctx.strokeRect(6.5,6.5,203,294);
+    drawImageMapRotatedAtTopLeft(12,147,1,-Math.PI/2);
+    drawImageMap(12,180,271);
+    drawImageMap(15,33,85);drawImageMap(15,33,235);
+  }
 }
 function menuRoundRect(x,y,w,h,r=0){ctx.beginPath();ctx.rect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
 function drawJ2MEPanel(x,y,w,h,fill='#4b260d',ornaments=true){

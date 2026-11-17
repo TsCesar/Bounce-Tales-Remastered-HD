@@ -218,14 +218,17 @@
 <script src="src/original-hud.js?v=62"></script>
 <script src="src/module-registry.js?v=62"></script>
 <script src="src/port-engine.js?v=62"></script>
-<script src="remaster/remaster.js?v=6"></script>
+<script src="remaster/remaster.js?v=7"></script>
+<script src="remaster/book.js?v=7"></script>
 <script src="remaster/scenery.js?v=3"></script>
 <script src="remaster/materials.js?v=4"></script>
 <script src="remaster/texture-hd.js?v=4"></script>
 <script src="game.js?v=62"></script>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=62',{updateViaCache:'none'}).catch(() => {}));
+// Native apps bundle all game assets. Avoid service-worker conflicts with
+// WKWebView and Android WebView's local Capacitor protocol.
+if (!window.Capacitor?.isNativePlatform?.() && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=7',{updateViaCache:'none'}).catch(() => {}));
 }
 </script>
 </body>
