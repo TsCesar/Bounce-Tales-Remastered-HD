@@ -160,6 +160,108 @@ const scenarios=[
       fs.writeFileSync(path.join(screenshots,c.name+'-v17-ground-tiles.png'),
         Buffer.from(sheet.split(',')[1],'base64'));
     }
+    if(!c.mobile){
+      // A genuine Chromium canvas contact sheet for the remaining V19 art.
+      // It calls the exact functions used by gameplay, not separate mocks.
+      const sheet=await page.evaluate(async()=>{
+        const art=window.BounceRemaster;
+        const maps=(await (await fetch('src/image-map.json')).json()).maps;
+        const canvas=document.createElement('canvas');
+        canvas.width=1650;canvas.height=850;
+        const ctx=canvas.getContext('2d');ctx.scale(3,3);
+        ctx.fillStyle='#EAF0E9';ctx.fillRect(0,0,550,283);
+        ctx.fillStyle='#294A54';ctx.font='bold 12px system-ui';
+        ctx.fillText('V19 · ESTRUCTURAS Y SEÑALES',15,19);
+        const ids=[130,131,132,176,177,178];
+        for(let i=0;i<ids.length;i++){
+          const id=ids[i],m=maps[String(id)],x=45+i*86,y=69;
+          if(!art.drawRemadeStructure(ctx,id,x,y,m))
+            throw Error('Missing structural vector '+id);
+          ctx.fillStyle='#284A55';ctx.font='9px system-ui';
+          ctx.fillText('ID '+id,x-12,87);
+        }
+        const signs=[152,153,154,243,244,245,246,247,248,249,250];
+        for(let i=0;i<signs.length;i++){
+          const id=signs[i],m=maps[String(id)];
+          const x=53+(i%6)*86,y=i<6?157:234;
+          if(!art.drawRemadeSign(ctx,id,x,y,m))
+            throw Error('Missing sign vector '+id);
+          ctx.fillStyle='#284A55';ctx.font='9px system-ui';
+          ctx.fillText('ID '+id,x-16,y+14);
+        }
+        ctx.save();ctx.translate(305,0);
+        if(!art.drawRemadeHud(ctx,{collected:14,total:28,seconds:153}))
+          throw Error('Missing HD HUD');
+        ctx.restore();
+        for(let i=0;i<3;i++){
+          if(!art.drawRemadeFragment(ctx,[390,396,414][i],230+i*13,259,1))
+            throw Error('Missing rock fragment '+i);
+        }
+        return canvas.toDataURL('image/png');
+      });
+      fs.writeFileSync(path.join(screenshots,c.name+'-v19-remaining-art.png'),
+        Buffer.from(sheet.split(',')[1],'base64'));
+    }
+    if(!c.mobile){
+      const special=await page.evaluate(async()=>{
+        const art=window.BounceRemaster;
+        const maps=(await(await fetch('src/image-map.json')).json()).maps;
+        if(typeof art.drawRemadeSpecial!=='function')
+          throw Error('V20 special remakes missing');
+        const canvas=document.createElement('canvas');
+        canvas.width=1650;canvas.height=900;
+        const ctx=canvas.getContext('2d');ctx.scale(3,3);
+        ctx.fillStyle='#EEF2EC';ctx.fillRect(0,0,550,300);
+        ctx.fillStyle='#2B4C53';ctx.font='bold 12px sans-serif';
+        ctx.fillText('V20 · FIGURAS ESPECIALES REMASTERIZADAS',12,20);
+        const rows=[
+          [334,68,151,'TORRE ROCA',174],
+          [342,185,181,'DESCARGA',244],
+          [345,278,179,'COLUMNA',194],
+          [350,377,183,'PORTAL',200],
+          [351,454,243,'CASA-SETA',261],
+          [354,70,259,'FRANJA',281]
+        ];
+        for(const [id,x,y,label,captionY] of rows){
+          if(!art.drawRemadeSpecial(ctx,id,x,y,maps[String(id)]))
+            throw Error('Missing special sprite '+id);
+          ctx.fillStyle='#37545D';ctx.font='9px sans-serif';
+          ctx.fillText(label+' · '+id,x-(id===351?38:25),captionY);
+        }
+        return canvas.toDataURL('image/png');
+      });
+      fs.writeFileSync(path.join(screenshots,c.name+'-v20-specials.png'),
+        Buffer.from(special.split(',')[1],'base64'));
+    }
+    if(!c.mobile){
+      const image=await page.evaluate(async()=>{
+        const art=window.BounceRemaster;
+        if(typeof art.drawRemadeResidualSprite!=='function')
+          throw Error('Missing last 13 V21 sprites');
+        const maps=(await(await fetch('src/image-map.json')).json()).maps;
+        const board=document.createElement('canvas');
+        board.width=1650;board.height=900;
+        const ctx=board.getContext('2d');
+        ctx.scale(3,3);ctx.fillStyle='#F0F1EA';ctx.fillRect(0,0,550,300);
+        ctx.fillStyle='#2E4D56';ctx.font='bold 12px system-ui';
+        ctx.fillText('V21 · REMAKE DE LOS ÚLTIMOS 13 SPRITES RLEF',13,21);
+        const ids=[53,54,81,111,112,116,133,134,135,136,137,343,344];
+        for(let i=0;i<ids.length;i++){
+          const id=ids[i],m=maps[String(id)];
+          const first=i<6,slot=first?i:i-6;
+          const x=first?[45,125,207,295,385,490][slot]:
+            [45,105,165,225,285,382,475][slot];
+          const y=first?134:248;
+          if(!art.drawRemadeResidualSprite(ctx,id,x,y,m))
+            throw Error('Missing art for residual sprite '+id);
+          ctx.fillStyle='#284957';ctx.font='bold 9px system-ui';
+          ctx.fillText('ID '+id,x-13,first?184:282);
+        }
+        return board.toDataURL('image/png');
+      });
+      fs.writeFileSync(path.join(screenshots,c.name+'-v21-final-sprite-gallery.png'),
+        Buffer.from(image.split(',')[1],'base64'));
+    }
     const high=await page.evaluate(()=>({
       game:document.getElementById('game').width*document.getElementById('game').height,
       text:document.getElementById('game-text').width*document.getElementById('game-text').height
@@ -170,6 +272,13 @@ const scenarios=[
     assert.ok(canvas);
     await page.mouse.click(canvas.x+canvas.width*.5,canvas.y+canvas.height*190/320);
     await page.waitForFunction(()=>document.getElementById('pause-mini')?.hidden===false,null,{timeout:20000});
+    // Clock panel ends at logical x=202; the Pause overlay must be outside it.
+    const hudClear=await page.evaluate(()=>{
+      const stage=document.getElementById('game').getBoundingClientRect();
+      const pause=document.getElementById('pause-mini').getBoundingClientRect();
+      return stage.left+stage.width*202/240<=pause.left+1;
+    });
+    assert.ok(hudClear,c.name+' Pause overlay covers the remade clock');
     await page.waitForTimeout(170);
     await page.screenshot({path:path.join(screenshots,c.name+'-gameplay.png')});
     await page.locator('#pause-mini').click({timeout:10000});
