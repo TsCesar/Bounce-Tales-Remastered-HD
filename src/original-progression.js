@@ -28,6 +28,19 @@
   }
   function isUnlocked(save,level){return !!save.records[level]&&save.records[level].clearTime>0;}
   function unlockedForme(save){return (save.records[8].clearTime>0&&save.records[8].clearTime<9999)?2:(save.records[3].clearTime>0&&save.records[3].clearTime<9999)?1:0;}
+  // Super Bounce is a secret enhancement of the normal red form, not an
+  // extra index in the original three-entry form arrays. Derive eligibility
+  // from completed medal records so an existing saved game is recognized.
+  function superBounceUnlocked(save){
+    if(!Array.isArray(save?.records)||save.records.length!==15)return false;
+    return save.records.every((record,index)=>{
+      const complete=record&&record.clearTime>0&&record.clearTime<9999;
+      const goldEggs=record?.eggs>=EGG_TROPHY_REQUIREMENTS[index*3];
+      const bonus=BONUS_LEVELS.some(item=>item.level===index);
+      const goldTime=bonus||record.clearTime<=TIMER_TROPHY_REQUIREMENTS[index*3];
+      return Boolean(complete&&goldEggs&&goldTime);
+    });
+  }
   function nextRegular(level){let next=level+1;if(next===4||next===9||next===14)next++;return next<15?next:-1;}
   function complete(save,level,eggs,timeMs){
     if(!Number.isInteger(level)||level<0||level>=15)throw new RangeError('Invalid level index');
@@ -53,5 +66,5 @@
   function reset(storage){try{storage?.removeItem(SAVE_KEY);}catch{}return create();}
   function chapterGroup(level){return level<=4?0:level<=9?1:2;}
   function unlockedCount(save){return save.records.filter(r=>r.clearTime>0).length;}
-  return {SAVE_KEY,BONUS_LEVELS,FORM_UNLOCK_LEVELS,EGG_SCORE_MULTIPLIERS,EGG_TROPHY_REQUIREMENTS,TIMER_TROPHY_REQUIREMENTS,create,hasSavedGame,load,save,reset,totalEggs,unlockBonuses,isUnlocked,unlockedForme,nextRegular,complete,chapterGroup,unlockedCount};
+  return {SAVE_KEY,BONUS_LEVELS,FORM_UNLOCK_LEVELS,EGG_SCORE_MULTIPLIERS,EGG_TROPHY_REQUIREMENTS,TIMER_TROPHY_REQUIREMENTS,create,hasSavedGame,load,save,reset,totalEggs,unlockBonuses,isUnlocked,unlockedForme,superBounceUnlocked,nextRegular,complete,chapterGroup,unlockedCount};
 });

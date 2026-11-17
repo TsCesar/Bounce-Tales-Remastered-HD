@@ -18,9 +18,6 @@
     return {x:(matrix[0]*x+matrix[1]*y+matrix[2])/65536,
             y:(matrix[3]*x+matrix[4]*y+matrix[5])/65536};
   }
-  function within(p,b){
-    return p.x>=b.left&&p.x<=b.right&&p.y>=b.bottom&&p.y<=b.top;
-  }
   // Swept contact prevents missing the pile at 60Hz on faster impacts.
   function segmentTouches(a,b,r){
     let enter=0,exit=1;
@@ -92,8 +89,12 @@
           const ob=this.bounds(other,world);
           if(!ob)continue;
           const proximity=Math.hypot(ob.anchor.x-b.anchor.x,ob.anchor.y-b.anchor.y);
+          // Pair the intact and fragmented variants only. Two unrelated
+          // rock piles using the same sprite ID must remain independent.
+          const counterpart=other.sprites?.some(s=>
+            ROCK_IMAGES.has(s[2]) && !object.sprites?.some(t=>t[2]===s[2]));
           if(other.id===object.id||
-            (other.parent===object.parent&&proximity<290)){
+            (counterpart&&other.parent===object.parent&&proximity<220)){
             this.broken.add(other.id);
             ids.push(other.id);
           }

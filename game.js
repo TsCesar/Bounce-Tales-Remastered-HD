@@ -508,8 +508,11 @@ function update(dt,sourceDeltaMs=Math.round(dt*1000)){
   // 13 story levels do). Mode 1 swaps in other handlers the campaign never uses, so any
   // non-zero mode leaves the ball uncontrolled here.
   if((eventEngine?.vars[1]|0)===0){
-    if(held.left)body.moveLeft(false);
-    if(held.right)body.moveRight(false);
+    // The hidden Super Bounce reward boosts only the original red form.
+    // Its 50-unit horizontal boost is already defined in BounceBody.
+    const superBounce=body.forme===0&&BounceOriginalProgression.superBounceUnlocked(progress);
+    if(held.left)body.moveLeft(superBounce);
+    if(held.right)body.moveRight(superBounce);
     if(held.jump)body.jump(false);
   }
   // JAR m.i(): update scene objects first (including an already-active e.d()
@@ -1320,7 +1323,7 @@ function completeCurrentChapter(){
   if(progress.unlockedForme>unlockedForme)completionNotices.push(gameText(10,'You have gained a new ball form!'));
   if(BounceOriginalProgression.BONUS_LEVELS.some(item=>item.level===currentLevel.index))completionNotices.push(gameText(11,'In bonus chapters, collect all items as quickly as possible.'));
   if(progress.records.every(record=>record.clearTime>0&&record.clearTime<9999))completionNotices.push(gameText(5,'All chapters completed!'));
-  if(progress.records.every((record,index)=>rankEggMedal(index,record.eggs)>=2&&([4,9,14].includes(index)||rankTimeMedal(index,record.clearTime)>=2)))completionNotices.push(gameText(6,'Super Bounce form unlocked!'));
+  if(BounceOriginalProgression.superBounceUnlocked(progress))completionNotices.push(gameText(6,'Super Bounce form unlocked!'));
 
   progress.totalGameTime+=elapsed;progress.selected=currentLevel.index;BounceOriginalProgression.save(localStorage,progress);unlockedForme=progress.unlockedForme;
   document.getElementById('complete-title').textContent=getLocalizedLevelName(currentLevel.index);

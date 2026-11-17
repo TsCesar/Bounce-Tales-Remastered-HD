@@ -1,11 +1,11 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-rock-break-v5';
+const CACHE_NAME = 'bounce-tales-v62' + '-form-audit-v6';
 const APP_SHELL = [
   "./",
   "index.html",
   "style.css?v=62",
   "remaster/remaster.css?v=1",
-  "remaster/remaster.js?v=4",
+  "remaster/remaster.js?v=6",
   "remaster/texture-hd.js?v=4",
   "remaster/scenery.js?v=3",
   "remaster/materials.js?v=4",
@@ -47,7 +47,7 @@ const APP_SHELL = [
   "src/midp-graphics.js?v=62",
   "src/original-progression.js?v=62",
   "src/game-particles.js?v=62",
-  "src/rock-break.js?v=5",
+  "src/rock-break.js?v=6",
   "src/sprite-atlas.js?v=62",
   "src/audio-controller.js?v=62",
   "src/control-layout.js?v=62",

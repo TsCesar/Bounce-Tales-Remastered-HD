@@ -64,7 +64,9 @@
   api.beginFrame = beginFrame;
 
   function drawBounce(ctx, p) {
-    if (quality === 'classic' || !p || p.r <= 0) return;
+    // Never cover Bumpy's 32-frame rocky sprite or Wolly's 6 coloured arcs
+    // with the red-ball material overlay: each form has distinct art.
+    if (quality === 'classic' || !p || p.r <= 0 || p.form !== 0) return;
     const r = p.r;
     ctx.save();
     ctx.translate(p.x, p.y);
