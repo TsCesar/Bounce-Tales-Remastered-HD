@@ -29,7 +29,7 @@
 <meta name="twitter:image" content="https://prasannaone.github.io/BounceTales/bounce-tales-web-preview.png">
 <title>Bounce Tales</title>
 <link rel="stylesheet" href="style.css?v=62">
-<link rel="stylesheet" href="remaster/remaster.css?v=11">
+<link rel="stylesheet" href="remaster/remaster.css?v=12">
 </head>
 <body>
 <main id="app">
@@ -225,7 +225,7 @@
 // Native apps bundle all game assets. Avoid service-worker conflicts with
 // WKWebView and Android WebView's local Capacitor protocol.
 if (!window.Capacitor?.isNativePlatform?.() && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=63',{updateViaCache:'none'}).catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=64',{updateViaCache:'none'}).catch(() => {}));
 }
 </script>
 </body>

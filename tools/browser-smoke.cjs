@@ -8,7 +8,8 @@ const screenshots = path.resolve('artifacts/browser');
 const scenarios = [
   { name: 'desktop', viewport: { width: 1366, height: 768 }, dpr: 1, mobile: false },
   { name: 'retina-desktop', viewport: { width: 1920, height: 1080 }, dpr: 2, mobile: false },
-  { name: 'touch-mobile', viewport: { width: 390, height: 844 }, dpr: 2, mobile: true }
+  { name: 'touch-mobile', viewport: { width: 390, height: 844 }, dpr: 2, mobile: true },
+  { name: 'touch-landscape', viewport: { width: 844, height: 390 }, dpr: 2, mobile: true }
 ];
 
 async function exposeFrameChecks(page) {
@@ -150,9 +151,23 @@ async function checkScenario(browser, scenario) {
     }
     const canvas = await page.locator('#game').boundingBox();
     assert.ok(canvas);
-    await page.mouse.click(canvas.x + canvas.width * .5, canvas.y + canvas.height * 190 / 320);
+    const chooseAt = logicalY => {
+      const x = canvas.x + canvas.width * .5, y = canvas.y + canvas.height * logicalY / 320;
+      return scenario.mobile ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
+    };
+    await chooseAt(190);
+    await page.waitForFunction(() => ['select', 'play'].includes(document.getElementById('app')?.dataset.mode));
+    if (await page.locator('#app').getAttribute('data-mode') === 'select') await chooseAt(277);
     await page.waitForFunction(() => document.getElementById('pause-mini')?.hidden === false);
-    await page.locator('#pause-mini').click();
+    const pause = page.locator('#pause-mini');
+    const pauseBox = await pause.boundingBox();
+    assert.ok(pauseBox && pauseBox.x >= 0 && pauseBox.y >= 0,
+      'Pause must be fully visible');
+    assert.ok(pauseBox.x + pauseBox.width <= scenario.viewport.width &&
+      pauseBox.y + pauseBox.height <= scenario.viewport.height, 'Pause must fit in the viewport');
+    assert.ok(pauseBox.x >= canvas.x + canvas.width ||
+      pauseBox.y + pauseBox.height <= canvas.y, 'Pause must sit outside the original HUD');
+    await pause.click();
     await page.waitForFunction(() => document.getElementById('pause-mini')?.hidden === true);
     await page.screenshot({ path: path.join(screenshots, scenario.name + '-pause.png') });
 
