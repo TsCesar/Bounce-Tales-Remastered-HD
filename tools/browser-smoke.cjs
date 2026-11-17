@@ -151,7 +151,13 @@ async function checkScenario(browser, scenario) {
     }
     const canvas = await page.locator('#game').boundingBox();
     assert.ok(canvas);
-    await page.mouse.click(canvas.x + canvas.width * .5, canvas.y + canvas.height * 190 / 320);
+    const chooseAt = logicalY => {
+      const x = canvas.x + canvas.width * .5, y = canvas.y + canvas.height * logicalY / 320;
+      return scenario.mobile ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
+    };
+    await chooseAt(190);
+    await page.waitForFunction(() => ['select', 'play'].includes(document.getElementById('app')?.dataset.mode));
+    if (await page.locator('#app').getAttribute('data-mode') === 'select') await chooseAt(277);
     await page.waitForFunction(() => document.getElementById('pause-mini')?.hidden === false);
     const pause = page.locator('#pause-mini');
     const pauseBox = await pause.boundingBox();
