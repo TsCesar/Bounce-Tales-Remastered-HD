@@ -1,6 +1,6 @@
-/* Bounce Tales Remastered UHD — independent presentation overlay.
- * Gameplay, physics, level data and camera model remain the V62 original.
- * "RTX look" means 2.5D material/lighting simulation, not hardware ray tracing.
+/* Bounce Tales Retro-HD — simple vector-cartoon presentation.
+ * The V62 gameplay, level geometry and camera model are unchanged.
+ * No ray tracing, photoreal materials or 3D scene are used.
  */
 (function () {
   'use strict';

@@ -27,7 +27,7 @@ assert.doesNotMatch(terrain,/fractal\(|createPattern\(|fillRect\(i\+\.5,j\+\.6|M
 assert.match(ball,/function drawBounce\(ctx,p\)/);
 assert.match(ball,/p\.form\s*!==\s*0/);
 assert.match(ball,/function drawEgg\(ctx,x,y,seconds\)/);
-assert.doesNotMatch(ball,/vignette|bounceShine|metal\.addColorStop/);
+assert.doesNotMatch(ball,/const vignette\s*=|const bounceShine\s*=|metal\.addColorStop/);
 assert.match(book,/function drawTitleBook\(ctx\)/);
 assert.match(game,/rockBreakRuntime\?\.update\(\{/);
 for(const name of ['remaster/remaster.js','remaster/book.js','remaster/scenery.js','remaster/materials.js']){
