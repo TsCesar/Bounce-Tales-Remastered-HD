@@ -952,8 +952,11 @@ function canvasMenuListItem(label,y,action,index,options={}){
     const labelLeft=x+w/2-labelWidth/2,labelRight=x+w/2+labelWidth/2,centerY=y+h/2-2;
     // Original m.java places sprite 2 9 px before the label and sprite 326
     // 9 px after it, with a small opposing 0-5 px selection pulse.
-    drawImageMap(2,labelLeft-19+pulse,centerY);
-    drawImageMap(326,labelRight+19-pulse,centerY);
+    const left=labelLeft-19+pulse,right=labelRight+19-pulse;
+    if(!window.BounceRemaster?.drawSelectionArrows?.(ctx,left,right,centerY)){
+      drawImageMap(2,left,centerY);
+      drawImageMap(326,right,centerY);
+    }
   }
   menuText(label,x+w/2,y+h/2,size,color);
   if(!disabled)canvasMenuHits.push({x,y,w,h,action});
