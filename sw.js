@@ -1,5 +1,5 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-seamless-tiles-v17';
+const CACHE_NAME = 'bounce-tales-v62' + '-remake-decor-v18';
 const APP_SHELL = [
   "./",
   "index.html",
@@ -11,9 +11,10 @@ const APP_SHELL = [
   "remaster/scenery.js?v=14",
   "remaster/materials.js?v=13",
   "remaster/forms.js?v=14",
-  "remaster/world.js?v=14",
+  "remaster/world.js?v=18",
   "remaster/props.js?v=16",
   "remaster/tiles.js?v=17",
+  "remaster/decor.js?v=18",
   "manifest.webmanifest",
   "sw.js?v=62",
   "src/image-map.json",

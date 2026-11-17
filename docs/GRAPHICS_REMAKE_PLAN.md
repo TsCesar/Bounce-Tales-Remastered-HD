@@ -18,7 +18,9 @@ Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remak
 - [x] **Enemigos (cuatro tipos):** Candle, bumper, mole y stalker sustituyen el pixelado; desaparecen los cuadrados de error magenta en los modos HD/Ultra. La animación de peeking del topo depende del mismo temporizador que su comportamiento.
 - [x] **NPC aliados:** bola roja ilustrada con rostro y movimiento suave, sin modificar encuentros y diálogos.
 - [x] **35 piezas de terreno y plataformas:** bosque 253–266, laguna 162–175 y franjas del tramo final 120–126 redibujados como siluetas vectoriales suavizadas. Se conservan los offsets y tamaños originales; se evita ampliar los píxeles de los atlas antiguos.
-- [ ] **Resto de props y plataformas:** quedan por rehacer maderas, puentes y decoración no pertenecientes a las familias anteriores; necesitan mapeo con referencia real de cada sprite, no IDs inventados.
+- [x] **19 familias decorativas y peligros:** flores, arbustos, hongos, cristales, árboles, calabazas, anillos del tronco y pinchos redibujados con los recortes y anclajes originales.
+- [x] **Pilares altos del bosque:** decorados con bandas simples de corteza dentro de su geometría, sin cambiar la colisión.
+- [ ] **Resto de props:** quedan por rehacer maderas, puentes y decoraciones no pertenecientes a las familias anteriores; necesitan mapeo con referencia real de cada sprite, no IDs inventados.
 - [ ] **Animación fotograma a fotograma adicional:** mejorar gestos específicos de enemigos y props que aún estén representados de forma simplificada.
 - [ ] **Efectos:** transformación, impactos, partículas, fragmentos, agua y daño con formas vectoriales coherentes.
 - [ ] **HUD secundario y detalles de nivel:** sustituir los iconos de baja resolución aún visibles sin rehacer el libro.
@@ -33,4 +35,4 @@ El **modo Clásico** usa exactamente el render original. **HD/Ultra** dibujan nu
 - Verificar todas las ramas y la generación del APK Android y proyecto Xcode.
 - En cada revisión, comparar capturas; un test de integración correcto no sustituye una revisión visual en móvil.
 
-**Limitación actual:** V17 cubre las tres formas, rocas, fondos, muelles, cañones, NPC, cuatro clases de enemigos y 35 piezas de terreno. Quedan otros sprites de puentes, madera, objetos y decoración por dibujar. El libro y las formas V14 permanecen sin cambios. Mecánicas, físicas y niveles son los originales.
+**Limitación actual:** V18 incorpora el remake de 35 piezas de terreno, 19 motivos de decoración y peligros, enemigos, muelles, cañones, NPC, rocas y fondos, además de las tres formas. Siguen pendientes algunos puentes, madera y otros sprites, así como una inspección manual de los 15 capítulos. El libro y las tres formas V14 permanecen intactos.

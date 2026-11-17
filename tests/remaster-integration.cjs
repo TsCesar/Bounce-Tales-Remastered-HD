@@ -1,7 +1,7 @@
 /* Static integration checks for the independent presentation layer. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const files = ['index.html','game.js','remaster/remaster.js','remaster/texture-hd.js','remaster/scenery.js','remaster/materials.js','remaster/forms.js','remaster/world.js','remaster/props.js','remaster/tiles.js','remaster/book.js','remaster/remaster.css','tools/build_hd_textures.py','tools/validate_hd_textures.py','tools/build_hd_scenery.py','sw.js','.github/workflows/pages.yml'];
+const files = ['index.html','game.js','remaster/remaster.js','remaster/texture-hd.js','remaster/scenery.js','remaster/materials.js','remaster/forms.js','remaster/world.js','remaster/props.js','remaster/tiles.js','remaster/decor.js','remaster/book.js','remaster/remaster.css','tools/build_hd_textures.py','tools/validate_hd_textures.py','tools/build_hd_scenery.py','sw.js','.github/workflows/pages.yml'];
 for (const name of files) assert.ok(fs.existsSync(name),'Missing '+name);
 const page = fs.readFileSync('index.html','utf8');
 const game = fs.readFileSync('game.js','utf8');
@@ -27,9 +27,10 @@ assert.match(stylesheet,/#app \.topbar button,#app \.topbar a \{pointer-events:a
 assert.match(page,/remaster\/texture-hd\.js\?v=8/);
 assert.match(page,/remaster\/scenery\.js\?v=14/);
 assert.match(page,/remaster\/forms\.js\?v=14/);
-assert.match(page,/remaster\/world\.js\?v=14/);
+assert.match(page,/remaster\/world\.js\?v=18/);
 assert.match(page,/remaster\/props\.js\?v=16/);
 assert.match(page,/remaster\/tiles\.js\?v=17/);
+assert.match(page,/remaster\/decor\.js\?v=18/);
 assert.match(page,/remaster\/materials\.js\?v=13/);
 assert.match(game,/BounceRemaster\?\.drawSprite\?\.\(id,x,y,targetCtx\)/);
 assert.match(game,/BounceRemaster\?\.drawScenery\?\.\(/);
@@ -63,9 +64,11 @@ assert.match(sw,/bounce-tales-v62/);
 assert.match(sw,/remaster\/remaster\.js\?v=13/);
 assert.match(sw,/remaster\/book\.js\?v=13/);
 assert.match(sw,/remaster\/forms\.js\?v=14/);
-assert.match(sw,/remaster\/world\.js\?v=14/);
+assert.match(sw,/remaster\/world\.js\?v=18/);
 assert.match(sw,/remaster\/props\.js\?v=16/);
 assert.match(sw,/remaster\/tiles\.js\?v=17/);
+assert.match(sw,/remaster\/decor\.js\?v=18/);
+assert.match(game,/BounceRemaster\?\.drawRemadeDecor\?\.\(ctx,id,x,y,imageMaps.maps\[String\(id\)\]\)/);
 assert.match(game,/BounceRemaster\?\.drawRemadeGroundTile\?\.\(ctx,id,x,y,imageMaps.maps\[String\(id\)\]\)/);
 assert.match(game,/BounceRemaster\?\.drawRemadeTrampoline\?\.\(ctx/);
 assert.match(game,/BounceRemaster\?\.drawRemadeEnemy\?\.\(ctx/);
