@@ -53,13 +53,14 @@
       String(clockSeconds%60).padStart(2,'0');
     ctx.save();ctx.globalAlpha=1;
     pill(ctx,3,3,111,23);
-    pill(ctx,140,3,97,23);
+    // Keep the clock clear of the native/browser Pause control in the top-right.
+    pill(ctx,119,3,83,23);
     egg(ctx,17,14);
-    clock(ctx,153,14);
+    clock(ctx,132,14);
     ctx.fillStyle='#FFF9E4';ctx.font='700 10px system-ui,sans-serif';
     ctx.textBaseline='middle';ctx.textAlign='left';
     ctx.fillText(String(taken)+' / '+String(available),31,15);
-    ctx.textAlign='right';ctx.fillText(time,229,15);
+    ctx.textAlign='right';ctx.fillText(time,196,15);
     ctx.restore();
     return true;
   }
