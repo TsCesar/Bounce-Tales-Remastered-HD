@@ -200,6 +200,37 @@ const scenarios=[
       fs.writeFileSync(path.join(screenshots,c.name+'-v19-remaining-art.png'),
         Buffer.from(sheet.split(',')[1],'base64'));
     }
+    if(!c.mobile){
+      const special=await page.evaluate(async()=>{
+        const art=window.BounceRemaster;
+        const maps=(await(await fetch('src/image-map.json')).json()).maps;
+        if(typeof art.drawRemadeSpecial!=='function')
+          throw Error('V20 special remakes missing');
+        const canvas=document.createElement('canvas');
+        canvas.width=1650;canvas.height=900;
+        const ctx=canvas.getContext('2d');ctx.scale(3,3);
+        ctx.fillStyle='#EEF2EC';ctx.fillRect(0,0,550,300);
+        ctx.fillStyle='#2B4C53';ctx.font='bold 12px sans-serif';
+        ctx.fillText('V20 · FIGURAS ESPECIALES REMASTERIZADAS',12,20);
+        const rows=[
+          [334,68,151,'TORRE ROCA',174],
+          [342,185,181,'DESCARGA',244],
+          [345,278,179,'COLUMNA',194],
+          [350,377,183,'PORTAL',200],
+          [351,454,243,'CASA-SETA',261],
+          [354,70,259,'FRANJA',281]
+        ];
+        for(const [id,x,y,label,captionY] of rows){
+          if(!art.drawRemadeSpecial(ctx,id,x,y,maps[String(id)]))
+            throw Error('Missing special sprite '+id);
+          ctx.fillStyle='#37545D';ctx.font='9px sans-serif';
+          ctx.fillText(label+' · '+id,x-(id===351?38:25),captionY);
+        }
+        return canvas.toDataURL('image/png');
+      });
+      fs.writeFileSync(path.join(screenshots,c.name+'-v20-specials.png'),
+        Buffer.from(special.split(',')[1],'base64'));
+    }
     const high=await page.evaluate(()=>({
       game:document.getElementById('game').width*document.getElementById('game').height,
       text:document.getElementById('game-text').width*document.getElementById('game-text').height
