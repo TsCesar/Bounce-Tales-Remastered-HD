@@ -2,7 +2,7 @@ name: Publicar Bounce Tales en GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [web]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   validar:
+    if: github.ref == 'refs/heads/web'
     name: Comprobar juego completo
     runs-on: ubuntu-latest
     timeout-minutes: 20

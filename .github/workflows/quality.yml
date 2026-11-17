@@ -2,9 +2,9 @@ name: Project quality checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, web, android, ios]
   pull_request:
-    branches: [main]
+    branches: [main, web, android, ios]
   workflow_dispatch:
 
 permissions:

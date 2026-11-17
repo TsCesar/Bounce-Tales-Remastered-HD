@@ -1,3 +1,16 @@
+## Ramas de desarrollo
+
+| Rama | Destino | GitHub Actions |
+|---|---|---|
+| [`main`](../../tree/main) | Motor, niveles y recursos comunes | Solo calidad |
+| [`web`](../../tree/web) | Navegador y PWA | GitHub Pages |
+| [`android`](../../tree/android) | APK / Android Studio | Job Android |
+| [`ios`](../../tree/ios) | Xcode / iPhone | Job iOS |
+
+**Manual de trabajo:** [`docs/BRANCHING.md`](docs/BRANCHING.md). Los cambios de cada plataforma se mantienen en su rama y solo se incorporan al resto mediante merges revisados.
+
+---
+
 <div align="center">
 
 # 🟠 Bounce Tales

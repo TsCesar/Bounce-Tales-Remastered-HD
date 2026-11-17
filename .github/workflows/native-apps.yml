@@ -3,7 +3,7 @@ name: Crear apps Android e iOS (prototipos)
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [android, ios]
     paths:
       - 'capacitor.config.json'
       - 'package.json'
@@ -16,6 +16,7 @@ on:
       - 'game.js'
       - 'index.html'
       - 'style.css'
+      - 'docs/BRANCH_TARGET.md'
       - '.github/workflows/native-apps.yml'
 
 permissions:
@@ -23,6 +24,7 @@ permissions:
 
 jobs:
   android:
+    if: github.ref == 'refs/heads/android'
     name: Compilar APK de pruebas Android 16 (API 36)
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -80,6 +82,7 @@ jobs:
           retention-days: 30
 
   ios:
+    if: github.ref == 'refs/heads/ios'
     name: Generar proyecto iOS (firma App Store pendiente)
     runs-on: macos-26
     timeout-minutes: 45

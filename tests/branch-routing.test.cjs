@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const read=(p)=>fs.readFileSync(p,'utf8');
+const web=read('.github/workflows/pages.yml');
+const native=read('.github/workflows/native-apps.yml');
+const quality=read('.github/workflows/quality.yml');
+assert.match(web,/push:\s*\n\s*branches: \[web\]/);
+assert.match(web,/validar:\s*\n\s*if: github\.ref == 'refs\/heads\/web'/);
+assert.doesNotMatch(web,/branches: \[main\]/);
+assert.match(native,/branches: \[android, ios\]/);
+assert.match(native,/android:\s*\n\s*if: github\.ref == 'refs\/heads\/android'/);
+assert.match(native,/ios:\s*\n\s*if: github\.ref == 'refs\/heads\/ios'/);
+assert.match(native,/docs\/BRANCH_TARGET\.md/);
+assert.match(quality,/branches: \[main, web, android, ios\]/);
+assert.ok(fs.existsSync('docs/BRANCHING.md'));
+assert.match(read('docs/BRANCHING.md'),/No publica Pages ni compila/);
+console.log('Branch routing: Pages only on web; Android only on android; iOS only on ios; main is shared, tested foundation.');
