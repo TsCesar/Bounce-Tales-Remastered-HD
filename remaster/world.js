@@ -62,6 +62,32 @@
       gradient.addColorStop(.66,'rgba(255,255,255,0)');
       gradient.addColorStop(1,'rgba(19,42,53,.105)');
       ctx.fillStyle=gradient;ctx.fillRect(0,0,240,320);
+      // Large green vertical meshes are authored tree trunks / shafts.
+      // Add three broad flat bark bands instead of a featureless rectangle.
+      // Everything is clipped to the ORIGINAL mesh path; no collider changes.
+      const [red,green,blue]=rgb(poly.color>>>0);
+      if(green>red*1.15&&green>blue*1.08){
+        const projected=poly.vertices.map(screenPoint).filter(p=>
+          Number.isFinite(p.x)&&Number.isFinite(p.y));
+        if(projected.length){
+          const xs=projected.map(p=>p.x),ys=projected.map(p=>p.y);
+          const x0=Math.min(...xs),x1=Math.max(...xs);
+          const y0=Math.min(...ys),y1=Math.max(...ys);
+          const pw=x1-x0,ph=y1-y0;
+          if(pw>15&&ph>125&&ph>pw*2.4){
+            for(const fraction of [.20,.49,.77]){
+              const sx=x0+pw*fraction;
+              ctx.beginPath();ctx.moveTo(sx,y0);
+              ctx.bezierCurveTo(sx-pw*.08,y0+ph*.32,
+                sx+pw*.08,y0+ph*.68,sx,y1);
+              ctx.strokeStyle=fraction===.49?
+                'rgba(194,229,167,.16)':'rgba(19,63,45,.16)';
+              ctx.lineWidth=Math.min(9,Math.max(2.5,pw*.11));
+              ctx.stroke();
+            }
+          }
+        }
+      }
     }
     ctx.restore();
     return true;
