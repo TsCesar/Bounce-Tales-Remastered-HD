@@ -79,9 +79,10 @@
     if (toolbar) {
       const button = toolbar.querySelector('[data-remaster-mode]');
       if (button) {
-        const label=quality==='classic'?'ORIGINAL':'HD';
+        const label=quality==='classic'?'CLÁSICO':'REMASTERIZADO';
         button.textContent=label;
-        button.title='Cambiar entre Original y HD (H)';
+        button.dataset.shortLabel=quality==='classic'?'CLÁSICO':'REMASTER';
+        button.title='Cambiar entre Clásico y Remasterizado (H)';
         button.setAttribute('aria-label','Gráficos: '+label+'. Pulsa H para alternar.');
         button.setAttribute('aria-pressed',String(quality==='remastered'));
       }

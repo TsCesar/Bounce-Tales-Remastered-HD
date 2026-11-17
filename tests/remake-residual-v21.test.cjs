@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const maps=JSON.parse(fs.readFileSync('src/image-map.json','utf8')).maps;
-const root={window:{BounceRemaster:{quality:'ultra'}},Math,console};
+const root={window:{BounceRemaster:{quality:'remastered'}},Math,console};
 vm.createContext(root);
 vm.runInContext(fs.readFileSync('remaster/residual.js','utf8'),root);
 const art=root.window.BounceRemaster;

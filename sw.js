@@ -1,11 +1,11 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-original-hd';
+const CACHE_NAME = 'bounce-tales-v62' + '-classic-remaster-v23';
 const APP_SHELL = [
   "./",
   "index.html",
   "style.css?v=62",
-  "remaster/remaster.css?v=22-hd",
-  "remaster/remaster.js?v=22-hd",
+  "remaster/remaster.css?v=23-remaster",
+  "remaster/remaster.js?v=23-remaster",
   "remaster/book.js?v=13",
   "remaster/texture-hd.js?v=22",
   "remaster/scenery.js?v=22-hd",
