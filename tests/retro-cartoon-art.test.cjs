@@ -35,17 +35,17 @@ assert.doesNotMatch(ball,/const vignette\s*=|const bounceShine\s*=|metal\.addCol
 assert.match(book,/function drawTitleBook\(ctx\)/);
 assert.match(game,/rockBreakRuntime\?\.update\(\{/);
 for(const [name,version] of [
-  ['remaster/remaster.js',22],
+  ['remaster/remaster.js','22-hd'],
   ['remaster/book.js',13],
   ['remaster/materials.js',22],
-  ['remaster/scenery.js',22],
+  ['remaster/scenery.js','22-hd'],
   ['remaster/forms.js',14]
 ]){
   assert.ok(html.includes(name+'?v='+version),name+' HTML version');
   assert.ok(sw.includes(name+'?v='+version),name+' PWA version');
 }
-assert.ok(html.includes('remaster/world.js?v=18'));
-assert.ok(sw.includes('remaster/world.js?v=18'));
+assert.ok(html.includes('remaster/world.js?v=23'));
+assert.ok(sw.includes('remaster/world.js?v=23'));
 assert.ok(html.includes('remaster/decor.js?v=18'));
 assert.ok(sw.includes('remaster/decor.js?v=18'));
 assert.match(pages,/m\['version'\]==2 and m\['style'\]=='cartoon-retro-hd'/);

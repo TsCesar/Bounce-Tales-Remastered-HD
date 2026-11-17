@@ -27,7 +27,7 @@ assert.match(stylesheet,/#app \.topbar button,#app \.topbar a \{pointer-events:a
 assert.match(page,/remaster\/texture-hd\.js\?v=22/);
 assert.match(page,/remaster\/scenery\.js\?v=22/);
 assert.match(page,/remaster\/forms\.js\?v=14/);
-assert.match(page,/remaster\/world\.js\?v=18/);
+assert.match(page,/remaster\/world\.js\?v=23/);
 assert.match(page,/remaster\/props\.js\?v=16/);
 assert.match(page,/remaster\/tiles\.js\?v=17/);
 assert.match(page,/remaster\/decor\.js\?v=18/);
@@ -73,7 +73,7 @@ assert.match(sw,/bounce-tales-v62/);
 assert.match(sw,/remaster\/remaster\.js\?v=22/);
 assert.match(sw,/remaster\/book\.js\?v=13/);
 assert.match(sw,/remaster\/forms\.js\?v=14/);
-assert.match(sw,/remaster\/world\.js\?v=18/);
+assert.match(sw,/remaster\/world\.js\?v=23/);
 assert.match(sw,/remaster\/props\.js\?v=16/);
 assert.match(sw,/remaster\/tiles\.js\?v=17/);
 assert.match(sw,/remaster\/decor\.js\?v=18/);

@@ -58,13 +58,12 @@ for(const saved of [null,'hd','ultra','remastered']){
   const f=load({legacy:saved});
   assert.equal(f.api.quality,'remastered','migrate previous enhanced preset');
   assert.deepEqual([...f.api.qualityOptions],['classic','remastered']);
-  assert.equal(f.button.textContent,'REMASTERIZADO');
-  assert.equal(f.button.dataset.shortLabel,'REMASTER');
+  assert.equal(f.button.textContent,'HD');
   assert.equal(f.button.attributes['aria-pressed'],'true');
   assert.equal(f.doc.documentElement.dataset.bounceRemaster,'remastered');
   f.button.handlers.click();
   assert.equal(f.api.quality,'classic');
-  assert.equal(f.button.textContent,'CLÁSICO');
+  assert.equal(f.button.textContent,'ORIGINAL');
   assert.equal(f.button.attributes['aria-pressed'],'false');
   f.button.handlers.click();
   assert.equal(f.api.quality,'remastered');

@@ -76,8 +76,8 @@
 
   function drawWaterSurface(ctx,opts){
     if(remaster.quality==='classic'||opts.airTunnel)return;
-    const xs=[opts.left.x,opts.right.x,opts.bottomLeft.x,opts.bottomRight.x];
-    const ys=[opts.left.y,opts.right.y,opts.bottomLeft.y,opts.bottomRight.y];
+    const corners=[...opts.surface,opts.bottomLeft,opts.bottomRight];
+    const xs=corners.map(point=>point.x),ys=corners.map(point=>point.y);
     const left=Math.min(...xs),right=Math.max(...xs);
     const top=Math.min(...ys),bottom=Math.max(...ys);
     if(right<0||left>W||bottom<0||top>H||right<=left||bottom<=top)return;
@@ -93,14 +93,16 @@
     ctx.fillRect(left,top,right-left,bottom-top);
 
     const rows=4;
-    const width=Math.max(1,right-left),height=Math.max(1,bottom-top);
-    const startX=Math.max(-6,left),endX=Math.min(W+6,right);
+    const stillTop=Math.min(opts.left.y,opts.right.y);
+    const depth=bottom-stillTop;
+    const startX=left+Math.floor((Math.max(-8,left)-left)/8)*8;
+    const endX=Math.min(W+8,right);
     for(let i=0;i<rows;i++){
-      const y=top+height*(.19+i*.19);
+      const y=stillTop+depth*(.19+i*.19);
       const move=(opts.time||0)*.9+i*.85;
       ctx.beginPath();
       for(let x=startX,j=0;x<=endX+8;x+=8,j++){
-        const py=y+Math.sin(x*.052+move)*.65;
+        const py=y+Math.sin((x-left)*.052+move)*.65;
         if(!j)ctx.moveTo(x,py);else ctx.lineTo(x,py);
       }
       ctx.lineWidth=.65;
