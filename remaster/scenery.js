@@ -33,35 +33,10 @@
     biomes:[...cache.keys()],style:'cartoon-retro-hd'
   });
 
-  const FALLBACKS={
-    forest:['#75BBE2','#B2E4DD','#7DBDA0'],
-    lagoon:['#66BDD5','#C6EFE2','#6AB8A9'],
-    twilight:['#5D639B','#A79CCB','#737DAD'],
-    sunset:['#A674B3','#F5B8AB','#B586A4']
-  };
-  function drawLoadingBackdrop(ctx,biome){
-    const colors=FALLBACKS[biome];
-    ctx.save();
-    const sky=ctx.createLinearGradient(0,0,0,H);
-    sky.addColorStop(0,colors[0]);sky.addColorStop(.65,colors[1]);
-    sky.addColorStop(1,colors[2]);
-    ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-    // Continuous hand-drawn hills, not the old repeated parallax sprites.
-    ctx.beginPath();ctx.moveTo(0,H*.68);
-    ctx.bezierCurveTo(W*.27,H*.61,W*.41,H*.75,W*.64,H*.66);
-    ctx.bezierCurveTo(W*.80,H*.58,W*.92,H*.67,W,H*.62);
-    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
-    ctx.fillStyle=colors[2];ctx.fill();
-    ctx.restore();
-  }
   function drawScenery(ctx,level,time,cameraX,cameraY){
-    if(remaster.quality==='classic')return false;
-    const biome=biomeFor(level);
-    const image=getBackdrop(biome);
-    if(!image.complete||!image.naturalWidth){
-      drawLoadingBackdrop(ctx,biome);
-      return true;
-    }
+    if(remaster.quality==='classic')return;
+    const image=getBackdrop(biomeFor(level));
+    if(!image.complete||!image.naturalWidth)return false;
     ctx.save();
     ctx.imageSmoothingEnabled=true;
     ctx.imageSmoothingQuality='high';
@@ -76,8 +51,8 @@
 
   function drawWaterSurface(ctx,opts){
     if(remaster.quality==='classic'||opts.airTunnel)return;
-    const corners=[...opts.surface,opts.bottomLeft,opts.bottomRight];
-    const xs=corners.map(point=>point.x),ys=corners.map(point=>point.y);
+    const xs=[opts.left.x,opts.right.x,opts.bottomLeft.x,opts.bottomRight.x];
+    const ys=[opts.left.y,opts.right.y,opts.bottomLeft.y,opts.bottomRight.y];
     const left=Math.min(...xs),right=Math.max(...xs);
     const top=Math.min(...ys),bottom=Math.max(...ys);
     if(right<0||left>W||bottom<0||top>H||right<=left||bottom<=top)return;
@@ -92,17 +67,15 @@
     ctx.fillStyle=color;
     ctx.fillRect(left,top,right-left,bottom-top);
 
-    const rows=4;
-    const stillTop=Math.min(opts.left.y,opts.right.y);
-    const depth=bottom-stillTop;
-    const startX=left+Math.floor((Math.max(-8,left)-left)/8)*8;
-    const endX=Math.min(W+8,right);
+    const rows=remaster.quality==='ultra'?4:3;
+    const width=Math.max(1,right-left),height=Math.max(1,bottom-top);
+    const startX=Math.max(-6,left),endX=Math.min(W+6,right);
     for(let i=0;i<rows;i++){
-      const y=stillTop+depth*(.19+i*.19);
+      const y=top+height*(.19+i*.19);
       const move=(opts.time||0)*.9+i*.85;
       ctx.beginPath();
       for(let x=startX,j=0;x<=endX+8;x+=8,j++){
-        const py=y+Math.sin((x-left)*.052+move)*.65;
+        const py=y+Math.sin(x*.052+move)*.65;
         if(!j)ctx.moveTo(x,py);else ctx.lineTo(x,py);
       }
       ctx.lineWidth=.65;
