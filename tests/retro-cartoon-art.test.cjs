@@ -1,0 +1,38 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const read=(file)=>fs.readFileSync(file,'utf8');
+const painter=read('tools/build_hd_scenery.py');
+const scenery=read('remaster/scenery.js');
+const terrain=read('remaster/materials.js');
+const game=read('game.js');
+const ball=read('remaster/remaster.js');
+const book=read('remaster/book.js');
+const html=read('index.html');
+const sw=read('sw.js');
+const pages=read('.github/workflows/pages.yml');
+assert.match(painter,/"style":"cartoon-retro-hd"/);
+assert.match(painter,/ImageDraw/);
+assert.match(painter,/draw_cloud/);
+assert.match(painter,/forest_tree/);
+assert.match(painter,/crystal/);
+assert.doesNotMatch(painter,/import numpy|ImageFilter|soft_noise|np\.random|np\.gradient/);
+assert.match(scenery,/remaster.drawScenery = drawScenery/);
+assert.match(scenery,/remaster.drawWaterSurface = drawWaterSurface/);
+assert.match(scenery,/MAX_CACHED_BACKDROPS/);
+assert.match(scenery,/style:'cartoon-retro-hd'/);
+assert.doesNotMatch(scenery,/globalCompositeOperation = 'screen'|caustic|particle/i);
+assert.match(terrain,/remaster.drawTerrain = drawTerrain/);
+assert.doesNotMatch(terrain,/fractal\(|createPattern\(|fillRect\(i\+\.5,j\+\.6|Math\.random\(|getImageData\(/);
+assert.match(ball,/function drawBounce\(ctx,p\)/);
+assert.match(ball,/p\.form\s*!==\s*0/);
+assert.match(ball,/function drawEgg\(ctx,x,y,seconds\)/);
+assert.doesNotMatch(ball,/const vignette\s*=|const bounceShine\s*=|metal\.addColorStop/);
+assert.match(book,/function drawTitleBook\(ctx\)/);
+assert.match(game,/rockBreakRuntime\?\.update\(\{/);
+for(const name of ['remaster/remaster.js','remaster/book.js','remaster/scenery.js','remaster/materials.js']){
+  assert.ok(html.includes(name+'?v=13'),name+' HTML version');
+  assert.ok(sw.includes(name+'?v=13'),name+' PWA version');
+}
+assert.match(pages,/m\['version'\]==2 and m\['style'\]=='cartoon-retro-hd'/);
+console.log('Retro cartoon V13: four biomes, cel-shaded ground, simple water, matte eggs, ball and book; all gameplay hooks preserved.');
