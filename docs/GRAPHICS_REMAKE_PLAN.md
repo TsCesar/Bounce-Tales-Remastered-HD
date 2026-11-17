@@ -12,9 +12,13 @@ Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remak
 - [x] **Clásico:** los gráficos originales siguen disponibles y son el modo de comparación.
 - [x] **Libro:** ninguna modificación al archivo \`remaster/book.js\`.
 
-## Fase 2 — pendientes artísticos
-- [ ] **Props y plataformas:** identificar cada familia de sprites, crear arte nuevo de puentes, madera, muelles, cañones y elementos interactivos. Mantener anclajes y estados originales.
-- [ ] **Enemigos y NPC:** redibujar por familia y reconstruir todos los fotogramas animados.
+## Fase 2 — V15 en ejecución
+- [x] **Muelles:** nuevas ilustraciones para los tres modelos de las fases originales (IDs animados 497/509/490); la compresión se sincroniza con el fotograma físico.
+- [x] **Cañones:** redibujados como juguetes metálicos cartoon, con orientación y fogonazo según los estados del motor. No se modifican el lanzamiento ni la puntería.
+- [x] **Enemigos (cuatro tipos):** Candle, bumper, mole y stalker sustituyen el pixelado; desaparecen los cuadrados de error magenta en los modos HD/Ultra. La animación de peeking del topo depende del mismo temporizador que su comportamiento.
+- [x] **NPC aliados:** bola roja ilustrada con rostro y movimiento suave, sin modificar encuentros y diálogos.
+- [ ] **Resto de props y plataformas:** identificar con evidencias cada familia de sprites de puentes, madera y decoración y sustituirla por arte sin uniones visibles, sin inventar IDs.
+- [ ] **Animación fotograma a fotograma adicional:** mejorar gestos específicos de enemigos y props que aún estén representados de forma simplificada.
 - [ ] **Efectos:** transformación, impactos, partículas, fragmentos, agua y daño con formas vectoriales coherentes.
 - [ ] **HUD secundario y detalles de nivel:** sustituir los iconos de baja resolución aún visibles sin rehacer el libro.
 - [ ] **Prueba visual integral:** recorrido manual de los quince capítulos, capturas de cada bioma y dispositivos físicos Android/iOS.
@@ -28,4 +32,4 @@ El **modo Clásico** usa exactamente el render original. **HD/Ultra** dibujan nu
 - Verificar todas las ramas y la generación del APK Android y proyecto Xcode.
 - En cada revisión, comparar capturas; un test de integración correcto no sustituye una revisión visual en móvil.
 
-**Limitación actual:** V14 es la primera entrega real del remake, no un reemplazo de los 326 sprites, enemigos, plataformas y animaciones. El render del libro queda deliberadamente sin cambios.
+**Limitación actual:** V15 cubre las tres formas, las rocas, los fondos, los muelles, cañones, NPC y cuatro familias de enemigos. Quedan sprites de plataformas, madera y decoración por redibujar. El libro y las formas V14 permanecen sin cambios. Las mecánicas, físicas y niveles son las mismas.
