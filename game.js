@@ -38,8 +38,19 @@ const canvas=document.getElementById('game'),ctx=canvas.getContext('2d',{alpha:f
 const textCanvas=document.getElementById('game-text'),textCtx=textCanvas?.getContext('2d')||null;
 function syncMenuTextResolution(){
   if(!textCanvas||!textCtx)return;
-  const rect=canvas.getBoundingClientRect?.()||{width:W,height:H},dpr=Math.min(3,Math.max(1,window.devicePixelRatio||1));
-  const width=Math.max(1,Math.round((rect.width||W)*dpr)),height=Math.max(1,Math.round((rect.height||H)*dpr));
+  // The old text overlay could exceed 100 MB at desktop/retina sizes even
+  // while the main canvas was capped, causing WebView/browser OOM crashes.
+  const rect=canvas.getBoundingClientRect?.()||{width:W,height:H};
+  const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+  const budget=coarse?1300000:3200000;
+  const dpr=Math.min(coarse?2:2.25,Math.max(1,window.devicePixelRatio||1));
+  const preferred=window.BounceRemaster?.quality==='classic'
+    ?Math.max(1,Math.min(2,dpr))
+    :Math.max(1,(canvas.width||W)/W/(Math.max(1,(rect.width||W)/W)));
+  const cssW=Math.max(1,rect.width||W),cssH=Math.max(1,rect.height||H);
+  const ratio=Math.min(preferred*dpr,2800/Math.max(cssW,cssH),Math.sqrt(budget/(cssW*cssH)));
+  const width=Math.max(W,Math.round(cssW*ratio));
+  const height=Math.max(H,Math.round(cssH*ratio));
   if(textCanvas.width!==width)textCanvas.width=width;
   if(textCanvas.height!==height)textCanvas.height=height;
   textCtx.setTransform(width/W,0,0,height/H,0,0);textCtx.imageSmoothingEnabled=false;
@@ -1136,6 +1147,8 @@ function drawGameplayScene(){
 }
 function draw(){
   window.BounceRemaster?.beginFrame?.(ctx,canvas);
+  // Quality changes and DPI/viewport changes also resize the text plane.
+  syncMenuTextResolution();
   canvasMenuHits=[];ctx.clearRect(0,0,W,H);if(textCtx)textCtx.clearRect(0,0,W,H);
   if(mode===S.play){drawGameplayScene();return;}
   if(mode===S.pause){drawGameplayScene();drawCanvasPause();return;}

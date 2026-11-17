@@ -66,7 +66,7 @@ def main():
     parser.add_argument("--catalogue", default="src/sprite-atlas.json")
     parser.add_argument("--source", default="assets/original")
     parser.add_argument("--output", default="remaster/assets/hd")
-    parser.add_argument("--scale", type=int, default=4, choices=[4])
+    parser.add_argument("--scale", type=int, default=4, choices=[2, 4])
     args = parser.parse_args()
 
     catalogue = json.loads(Path(args.catalogue).read_text(encoding="utf-8"))

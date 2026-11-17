@@ -90,6 +90,9 @@ jobs:
           print(f"Validated {len(m['sprites'])} clean sprites in {len(m['pages'])} pages")
           PY
           python tools/validate_hd_textures.py --output public/remaster/assets/hd
+          # Lightweight 2x sprites for small devices; validate individually.
+          python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
+          python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
       - name: Generar los cuatro fondos cinematograficos HD
         shell: bash
         run: |
