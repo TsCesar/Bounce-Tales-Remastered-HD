@@ -36,12 +36,17 @@
   function drawScenery(ctx,level,time,cameraX,cameraY){
     if(remaster.quality==='classic')return;
     const image=getBackdrop(biomeFor(level));
-    if(!image.complete||!image.naturalWidth)return;
+    if(!image.complete||!image.naturalWidth)return false;
     ctx.save();
     ctx.imageSmoothingEnabled=true;
     ctx.imageSmoothingQuality='high';
-    ctx.drawImage(image,0,0,W,H);
+    // Tiny camera-following motion within an overscanned artwork.
+    // No repeating strips, no old atlas tiles, no blank viewport edges.
+    const parallaxX=Math.sin((cameraX||0)*.00028)*5;
+    const parallaxY=Math.sin((cameraY||0)*.00018)*3;
+    ctx.drawImage(image,-7+parallaxX,-4+parallaxY,W+14,H+8);
     ctx.restore();
+    return true;
   }
 
   function drawWaterSurface(ctx,opts){
