@@ -11,7 +11,7 @@ const APP_SHELL = [
   "remaster/scenery.js?v=3",
   "remaster/materials.js?v=4",
   "manifest.webmanifest",
-  "sw.js?v=7",
+  "sw.js?v=62",
   "src/image-map.json",
   "src/sprite-atlas.json",
   "assets/original/lang.xx",

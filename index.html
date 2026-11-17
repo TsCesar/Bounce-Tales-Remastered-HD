@@ -228,7 +228,7 @@
 // Native apps bundle all game assets. Avoid service-worker conflicts with
 // WKWebView and Android WebView's local Capacitor protocol.
 if (!window.Capacitor?.isNativePlatform?.() && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=7',{updateViaCache:'none'}).catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=62',{updateViaCache:'none'}).catch(() => {}));
 }
 </script>
 </body>
