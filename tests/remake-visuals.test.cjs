@@ -13,7 +13,7 @@ function canvas(){
   };
   return c;
 }
-const sandbox={window:{BounceRemaster:{quality:'ultra'}},Math,console};
+const sandbox={window:{BounceRemaster:{quality:'remastered'}},Math,console};
 sandbox.globalThis=sandbox.window;
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('remaster/forms.js','utf8'),sandbox);
