@@ -22,7 +22,7 @@ function fakeCanvas(){
   };
   return {ctx:c,calls};
 }
-const sandbox={window:{BounceRemaster:{quality:'ultra'}},console,Math};
+const sandbox={window:{BounceRemaster:{quality:'remastered'}},console,Math};
 vm.createContext(sandbox);
 for(const file of ['remaster/structures.js','remaster/finishing.js']){
   vm.runInContext(fs.readFileSync(file,'utf8'),sandbox,{filename:file});
@@ -85,7 +85,8 @@ const game=fs.readFileSync('game.js','utf8');
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 const book=fs.readFileSync('remaster/book.js','utf8');
-for(const [name,version] of [['structures',22],['finishing',19]]){
+for(const name of ['structures','finishing']){
+  const version=name==='structures'?22:19;
   assert.ok(html.includes('remaster/'+name+'.js?v='+version));
   assert.ok(sw.includes('remaster/'+name+'.js?v='+version));
 }
