@@ -131,6 +131,8 @@ function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   // 35 original ground-tile IDs now use fresh vector silhouettes and colors.
   // Keep source anchor, rotation matrix, script flags and depth untouched.
   if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
+     window.BounceRemaster?.drawRemadeSpecial?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
+  if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
      window.BounceRemaster?.drawRemadeStructure?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;
   if(targetCtx===ctx&&[S.play,S.pause,S.complete].includes(mode)&&
      window.BounceRemaster?.drawRemadeSign?.(ctx,id,x,y,imageMaps.maps[String(id)]))return;

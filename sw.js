@@ -1,5 +1,5 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-struct-hud-v19';
+const CACHE_NAME = 'bounce-tales-v62' + '-remake-specials-v20';
 const APP_SHELL = [
   "./",
   "index.html",
@@ -17,6 +17,7 @@ const APP_SHELL = [
   "remaster/decor.js?v=18",
   "remaster/structures.js?v=19",
   "remaster/finishing.js?v=19",
+  "remaster/specials.js?v=20",
   "manifest.webmanifest",
   "sw.js?v=62",
   "src/image-map.json",

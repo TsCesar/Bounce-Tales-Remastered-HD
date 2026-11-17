@@ -22,9 +22,10 @@ Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remak
 - [x] **Pilares altos del bosque:** decorados con bandas simples de corteza dentro de su geometría, sin cambiar la colisión.
 - [x] **Piezas estructurales V19:** redibujadas las familias 130–132 (interior de cuevas) y 176–178 (columnas de la laguna), que se repiten cientos de veces entre los niveles originales.
 - [x] **Carteles y señales V19:** tablas de madera 152/243, flechas y advertencias 153/154 y 244–250, conservando dimensiones y posiciones.
-- [ ] **Resto de props:** comprobar uno a uno los elementos de maderas, puentes y decoración aún presentes en el atlas; no sustituir elementos sin correspondencia real con el nivel.
+- [x] **Especiales V20:** torre de rocas (334), descarga vertical (342), columna naranja (345), portal con espiral (350), casa-seta (351) y franja luminosa (354), identificados en los niveles y redibujados con su silueta original.
+- [ ] **Resto de props:** seguir comprobando el atlas y las decoraciones restantes de los 15 niveles; no sustituir un elemento por un diseño sin correspondencia real.
 - [ ] **Animación fotograma a fotograma adicional:** mejorar gestos específicos de enemigos y props que aún estén representados de forma simplificada.
-- [x] **Efectos V19:** partículas vectoriales de fragmentación de rocas (IDs de fuente 390/396/414); su simulación sigue siendo la original. Los otros efectos ya dibujaban formas en Canvas.
+- [x] **Efectos V19:** partículas 390 (destellos dorados), 396 (espirales) y 414 (polvo suave) redibujadas según los fotogramas del atlas original, manteniendo su simulación y tiempos.
 - [x] **HUD V19:** iconos y contadores de huevos y tiempo redibujados con texto nítido y contraste accesible, sin modificar el libro ni los valores internos.
 - [ ] **Efectos/HUD restantes:** revisión visual de transiciones, checkpoints, avisos y estados concretos en los 15 niveles.
 - [ ] **Prueba visual integral:** recorrido manual de los quince capítulos, capturas de cada bioma y dispositivos físicos Android/iOS.
@@ -38,4 +39,4 @@ El **modo Clásico** usa exactamente el render original. **HD/Ultra** dibujan nu
 - Verificar todas las ramas y la generación del APK Android y proyecto Xcode.
 - En cada revisión, comparar capturas; un test de integración correcto no sustituye una revisión visual en móvil.
 
-**Limitación actual:** V19 amplía V18 con 6 tipos de piezas estructurales, 11 señales/carteles, un HUD nuevo y fragmentos de roca dibujados en Canvas. Aún quedan objetos secundarios de atlas y pruebas manuales de los 15 capítulos. El libro y las tres formas V14 permanecen intactos.
+**Limitación actual:** V20 amplía V19 con seis objetos especiales más y efectos que siguen los fotogramas originales. Quedan sprites de atlas secundarios por comprobar y una revisión manual de los 15 capítulos. El libro y las tres formas V14 permanecen intactos.
