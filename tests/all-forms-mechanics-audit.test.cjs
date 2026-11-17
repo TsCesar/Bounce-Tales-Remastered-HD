@@ -141,7 +141,7 @@ for(const name of names){
 assert.ok(rockLevels>=4,'original stage catalogue must contain special rock formations');
 const game=fs.readFileSync(path.join(root,'game.js'),'utf8');
 const visuals=fs.readFileSync(path.join(root,'remaster/remaster.js'),'utf8');
-assert.match(game,/body\\.moveRight\\(superBounce\\)/);
-assert.match(game,/body\\.moveLeft\\(superBounce\\)/);
-assert.match(visuals,/p\\.form !== 0/);
+assert.ok(game.includes('body.moveRight(superBounce)'));
+assert.ok(game.includes('body.moveLeft(superBounce)'));
+assert.ok(visuals.includes('p.form !== 0'));
 console.log('All forms audited: constants, jumps, midair control, slope gate, water, bumper enemies, Bumpy rocks, unlocks, Super Bounce reward, save and distinct visuals.');
