@@ -57,7 +57,7 @@ const scenarios=[
     assert.ok(high.text<=budget+4000);
     const canvas=await page.locator('#game').boundingBox();
     assert.ok(canvas);
-    await page.mouse.click(canvas.x+canvas.width*.5,canvas.y+canvas.height*196/320);
+    await page.mouse.click(canvas.x+canvas.width*.5,canvas.y+canvas.height*190/320);
     await page.waitForFunction(()=>document.getElementById('pause-mini')?.hidden===false,null,{timeout:20000});
     await page.waitForTimeout(170);
     await page.screenshot({path:path.join(screenshots,c.name+'-gameplay.png')});
