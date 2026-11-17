@@ -432,6 +432,12 @@ function updateCannonAnimations(dt){
   BounceOriginalCannon.update(cannons,dt*1000,cannonMesh);
 }
 function drawCannon(c){
+  const cannonPoint=screenPoint(getWorldPos(c.object));
+  const cannonHeading=cannonState?.cannon===c?cannonState.angle:cannonAngle(c);
+  if(window.BounceRemaster?.drawRemadeCannon?.(ctx,{
+    x:cannonPoint.x,y:cannonPoint.y,angle:cannonHeading,
+    active:c.animationActive,animMs:c.animationElapsedMs
+  }))return;
   if(!cannonMesh){
     const p=screenPoint(getWorldPos(c.object)),a=cannonState?.cannon===c?cannonState.angle:cannonAngle(c);
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-a);drawImageMap(48,0,0);ctx.restore();return;
@@ -752,6 +758,11 @@ function drawEnemy(e){
   const renderX=(e.prevX??e.x)+(e.x-(e.prevX??e.x))*renderAlpha;
   const renderY=(e.prevY??e.y)+(e.y-(e.prevY??e.y))*renderAlpha;
   const screen=screenPoint({x:renderX,y:renderY});
+  if(window.BounceRemaster?.drawRemadeEnemy?.(ctx,{
+    type:e.enemyType,x:screen.x,y:screen.y,time:elapsed,state:e.state,
+    propelType:e.propelType,molePeekTimer:e.molePeekTimer,
+    molePeekPeriod:e.molePeekPeriod,facingLeft:e.facingLeft
+  }))return;
   if(e.enemyType===0)drawImageMap(467,screen.x,screen.y,new Set(),Math.floor(elapsed*20));
   else if(e.enemyType===2){
     const bodyFrame=e.state===0?Math.floor(elapsed*1000/150)%4:0;
@@ -1152,10 +1163,17 @@ function drawGameplayScene(){
     }else if(item.type==='enemy'){
       if(!item.enemy.dead)drawEnemy(item.enemy);
     }else if(item.type==='trampoline'){
-      const t=item.trampoline,p=screenPoint(t);drawImageMap(t.imageId,p.x,p.y,new Set(),t.active?t.animFrame:0);
+      const t=item.trampoline,p=screenPoint(t);
+      if(!window.BounceRemaster?.drawRemadeTrampoline?.(ctx,{
+        x:p.x,y:p.y,imageId:t.imageId,frame:t.active?t.animFrame:0,active:t.active
+      }))drawImageMap(t.imageId,p.x,p.y,new Set(),t.active?t.animFrame:0);
     }else if(item.type==='water')drawWater(item.water);
     else if(item.type==='friend'){
-      const p=screenPoint(getWorldPos(item.object));ctx.fillStyle='#ED1C24';ctx.beginPath();ctx.arc(p.x,p.y,Math.round(20*SCALE),0,Math.PI*2);ctx.fill();
+      const p=screenPoint(getWorldPos(item.object));
+      if(!window.BounceRemaster?.drawRemadeFriend?.(ctx,{x:p.x,y:p.y,time:elapsed})){
+        ctx.fillStyle='#ED1C24';ctx.beginPath();
+        ctx.arc(p.x,p.y,Math.round(20*SCALE),0,Math.PI*2);ctx.fill();
+      }
     }else if(item.type==='cannon')drawCannon(item.cannon);
   }
   for(const e of bonusEggs){if(!e.collected){const p=screenPoint(e);drawImageMap(208,p.x,p.y);}}
