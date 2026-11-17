@@ -81,6 +81,7 @@
       if (button) {
         const label=quality==='classic'?'CLÁSICO':'REMASTERIZADO';
         button.textContent=label;
+        button.dataset.shortLabel=quality==='classic'?'CLÁSICO':'REMASTER';
         button.title='Cambiar entre Clásico y Remasterizado (H)';
         button.setAttribute('aria-label','Gráficos: '+label+'. Pulsa H para alternar.');
         button.setAttribute('aria-pressed',String(quality==='remastered'));
