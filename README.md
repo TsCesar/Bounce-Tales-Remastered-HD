@@ -2,10 +2,10 @@
 
 | Rama | Destino | GitHub Actions |
 |---|---|---|
-| [`main`](../../tree/main) | Motor, niveles y recursos comunes | Solo calidad |
-| [`web`](../../tree/web) | Navegador y PWA | GitHub Pages |
-| [`android`](../../tree/android) | APK / Android Studio | Job Android |
-| [`ios`](../../tree/ios) | Xcode / iPhone | Job iOS |
+| [`main`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/main) | Motor, niveles y recursos comunes | Solo calidad |
+| [`web`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/web) | Navegador y PWA | GitHub Pages |
+| [`android`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/android) | APK / Android Studio | Job Android |
+| [`ios`](https://github.com/TsCesar/Bounce-Tales-Remastered-HD/tree/ios) | Xcode / iPhone | Job iOS |
 
 **Manual de trabajo:** [`docs/BRANCHING.md`](docs/BRANCHING.md). Los cambios de cada plataforma se mantienen en su rama y solo se incorporan al resto mediante merges revisados.
 
