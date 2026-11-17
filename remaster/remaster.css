@@ -113,7 +113,8 @@ html[data-bounce-remaster="classic"] #game-wrap #game {image-rendering:pixelated
     transform-origin:center !important;
   }
   #app #game-controls .control:focus-visible {outline:2px solid #fff !important;}
-  #remaster-toolbar {bottom:auto;top:max(46px,calc(41px + env(safe-area-inset-top)));right:7px;opacity:.83;}
+  /* Place quality/full-screen in the header centre, outside Pause hitbox. */
+  #remaster-toolbar {bottom:auto;top:max(7px,env(safe-area-inset-top));right:auto;left:50%;transform:translateX(-50%);opacity:.9;}
   #remaster-toolbar button {height:27px;min-width:34px;padding:4px 7px;font-size:9px;}
   #app .topbar {opacity:.92;}
 }
