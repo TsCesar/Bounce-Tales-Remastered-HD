@@ -1,5 +1,5 @@
 'use strict';
-/* Verify actual native web bundle AFTER asset generation, before Capacitor. */
+/* Verify the original resources in the native web bundle before Capacitor. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
@@ -8,7 +8,7 @@ const exists=relative=>fs.existsSync(path.join(out,relative));
 for(const item of ['index.html','game.js','style.css','sw.js',
   'src/rlef-reader.js','src/rock-break.js','src/image-map.json',
   'src/sprite-atlas.json','assets/original/bf','assets/original/bu',
-  'remaster/remaster.js','remaster/texture-hd.js','mobile-bundle.json']){
+  'remaster/remaster.js','remaster/remaster.css','mobile-bundle.json']){
   assert.ok(exists(item),'Missing native game asset: '+item);
 }
 const html=fs.readFileSync(path.join(out,'index.html'),'utf8');
@@ -20,19 +20,7 @@ for(const match of html.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)=["']([^
 const meta=JSON.parse(fs.readFileSync(path.join(out,'mobile-bundle.json'),'utf8'));
 assert.equal(meta.offline,true);
 assert.equal(meta.assetBase,'relative');
-const textureProfiles=[['hd',4],['mobile',2]];
 const imageMap=JSON.parse(fs.readFileSync(path.join(out,'src/image-map.json'),'utf8'));
-const sourceIds=Object.entries(imageMap.maps).filter(([,sprite])=>sprite.type==='simple').map(([id])=>id).sort();
-for(const [folder,scale] of textureProfiles){
-  const assetRoot='remaster/assets/'+folder+'/';
-  const manifest=JSON.parse(fs.readFileSync(path.join(out,assetRoot,'manifest.json'),'utf8'));
-  assert.equal(manifest.version,5);
-  assert.equal(manifest.scale,scale);
-  assert.equal(manifest.spriteCount,sourceIds.length);
-  assert.deepEqual(Object.keys(manifest.sprites).sort(),sourceIds);
-  assert.ok(manifest.pages.length>0);
-  for(const page of manifest.pages)assert.ok(exists(assetRoot+page),'Missing atlas '+page);
-}
 const sprites=JSON.parse(fs.readFileSync(path.join(out,'src/sprite-atlas.json'),'utf8'));
 assert.equal(sprites.static_sprite_count,326);
 for(const item of sprites.png_images)
@@ -43,4 +31,4 @@ for(const name of ['bf','bg','bh','bi','bj','bk','bl','bm','bn','bo','bp','bq','
   assert.ok(exists('assets/original/'+name),'Missing one of 15 chapters: '+name);
 const audioDir=path.join(out,'assets/audio');
 assert.ok(fs.readdirSync(audioDir).length>0,'No offline soundtrack resources found');
-console.log(`Native offline bundle validated: 15 chapters, ${sourceIds.length} original crops, 4x+2x atlases, audio, JS/CSS and icons.`);
+console.log(`Native offline bundle validated: 15 chapters, ${imageMap.atlases.length} original PNGs, audio, JS/CSS and icons.`);

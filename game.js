@@ -124,11 +124,22 @@ function imgFor(index){
   if(loadedImages.has(index))return loadedImages.get(index);
   const im=new Image();im.src='assets/original/'+atlases[index];loadedImages.set(index,im);return im;
 }
+function drawOriginalCrop(target,image,sx,sy,width,height,x,y){
+  // A complete large image can be filtered without sampling neighbouring atlas tiles.
+  const quality=window.BounceRemaster?.quality;
+  const smooth=(quality==='hd'||quality==='ultra')&&width*height>=2400&&
+    sx===0&&sy===0&&width===image.naturalWidth&&height===image.naturalHeight;
+  if(smooth){
+    target.save();
+    target.imageSmoothingEnabled=true;
+    target.imageSmoothingQuality='low';
+  }
+  target.drawImage(image,sx,sy,width,height,x,y,width,height);
+  if(smooth)target.restore();
+}
 function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   x=Math.round(x);y=Math.round(y);
   if(!Number.isInteger(id)||id<0||seen.has(id)||seen.size>=32||!imageMaps?.maps)return;
-  // All modes resolve the same compound sprites, animation frames and anchors.
-  if(window.BounceRemaster?.drawSprite?.(id,x,y,targetCtx))return;
   seen.add(id);
   // IDs 0–325 use the decoded o.java type-2 descriptor table directly.
   // The catalogue was validated against all 326 legacy image-map records at boot.
@@ -136,8 +147,8 @@ function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
   if(exact){
     const crop=exact.crop,offset=exact.draw_offset,im=imgFor(exact.image_slot);
     if(im&&im.complete&&im.naturalWidth){
-      targetCtx.drawImage(im,crop.x,crop.y,crop.width,crop.height,
-        Math.round(x-offset.x),Math.round(y-offset.y),crop.width,crop.height);
+      drawOriginalCrop(targetCtx,im,crop.x,crop.y,crop.width,crop.height,
+        Math.round(x-offset.x),Math.round(y-offset.y));
     }
     seen.delete(id);return;
   }
@@ -147,8 +158,8 @@ function drawImageMap(id,x,y,seen=new Set(),frame=0,targetCtx=ctx){
     if(map.width<=0||map.height<=0){seen.delete(id);return;}
     const im=imgFor(map.image);
     if(im&&im.complete&&im.naturalWidth){
-      targetCtx.drawImage(im,map.atlasX,map.atlasY,map.width,map.height,
-        Math.round(x-map.originX),Math.round(y-map.originY),map.width,map.height);
+      drawOriginalCrop(targetCtx,im,map.atlasX,map.atlasY,map.width,map.height,
+        Math.round(x-map.originX),Math.round(y-map.originY));
     }
   }else if(map.type==='compound'){
     for(const part of map.parts)drawImageMap(part[2],x+part[0],y+part[1],seen,frame,targetCtx);

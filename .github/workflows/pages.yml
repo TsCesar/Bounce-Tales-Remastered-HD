@@ -31,9 +31,6 @@ jobs:
         run: |
           npm run verify
           node --check remaster/remaster.js
-          node --check remaster/texture-hd.js
-      - name: Comprobar compilacion del generador de texturas
-        run: python3 -m py_compile tools/build_hd_textures.py tools/validate_hd_textures.py
       - name: Comprobar archivos de la version web
         shell: bash
         run: |
@@ -63,21 +60,7 @@ jobs:
           cp index.html game.js style.css sw.js manifest.webmanifest .nojekyll public/
           cp favicon.png icon-192.png icon-512.png apple-touch-icon.png bounce-tales-web-preview.png public/
           cp -a src assets remaster public/
-          test -f public/index.html && test -f public/assets/original/aa.png && test -f public/remaster/remaster.js && test -f public/remaster/remaster.css && test -f public/remaster/texture-hd.js
-      - name: Instalar Python para el procesado HD
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Generar y validar las texturas originales ampliadas
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m pip install --disable-pip-version-check pillow
-          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
-          python tools/validate_hd_textures.py --output public/remaster/assets/hd
-          # Lightweight 2x sprites for small devices; validate individually.
-          python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
-          python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
+          test -f public/index.html && test -f public/assets/original/aa.png && test -f public/remaster/remaster.js && test -f public/remaster/remaster.css
       # Requiere habilitar Settings > Pages > Source: GitHub Actions
       # El GITHUB_TOKEN no tiene permisos para crear el sitio Pages.
       - name: Configurar GitHub Pages

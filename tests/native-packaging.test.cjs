@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const files=['capacitor.config.json','tools/build_mobile_web.cjs','.github/workflows/native-apps.yml',
-  'remaster/remaster.js','remaster/texture-hd.js'];
+  'remaster/remaster.js','remaster/remaster.css'];
 for(const file of files)assert.ok(fs.existsSync(file),file);
 const config=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -22,10 +22,10 @@ assert.match(workflow,/upload-artifact@v4/);
 assert.match(workflow,/cap add ios/);
 assert.match(workflow,/macos-26/);
 assert.match(html,/window\.Capacitor\?\.isNativePlatform\?\.\(\)/);
-assert.match(html,/remaster\/texture-hd\.js\?v=9/);
-assert.match(worker,/remaster\/texture-hd\.js\?v=9/);
+assert.match(html,/remaster\/remaster\.js\?v=15/);
+assert.match(worker,/remaster\/remaster\.js\?v=15/);
 assert.match(game,/drawImageMap\(332,120,160\)/);
 assert.match(game,/drawImageMap\(331,120,160\)/);
-assert.match(workflow,/tools\/validate_hd_textures\.py --output public\/remaster\/assets\/mobile/);
+assert.match(workflow,/node tools\/verify_mobile_bundle\.cjs/);
 assert.match(fs.readFileSync('remaster/remaster.js','utf8'),/renderingScale\(cssW,cssH\)/);
-console.log('Native packaging audit: offline Capacitor Android/iOS, original book and validated texture profiles.');
+console.log('Native packaging audit: offline Capacitor Android/iOS with the original book and PNG resources.');

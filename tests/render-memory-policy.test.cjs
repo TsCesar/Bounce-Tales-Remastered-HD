@@ -41,6 +41,8 @@ function ensureBounded(mobile){
     'Large high-DPI screens must not create giant framebuffers');
   assert.ok(canvas.width<=2800&&canvas.height<=2800);
   assert.ok(canvas.width>=240&&canvas.height>=320);
+  assert.ok(Number.isInteger(canvas.width/240));
+  assert.equal(canvas.width/240,canvas.height/320);
   canvas.getBoundingClientRect=()=>fakeRect(360,480);
   box.context.devicePixelRatio=1;
   api.setQuality('hd');api.beginFrame(ctx,canvas);
@@ -110,5 +112,5 @@ function checkScenery(mobile){
   assert.match(game,/function syncMenuTextResolution/);
   assert.match(game,/const budget=coarse\?1300000:3200000/);
   assert.match(game,/function draw\(\)\{\s*window\.BounceRemaster\?\.beginFrame\?\.\(ctx,canvas\);\s*\/\/[^\n]+\s*syncMenuTextResolution\(\)/);
-  console.log('Rendering/memory: capped game + text planes, 2x mobile/4x desktop, 1–2 lazy scenery images verified.');
+  console.log('Rendering/memory: bounded integer scaling and isolated checks of the historical art modules passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
