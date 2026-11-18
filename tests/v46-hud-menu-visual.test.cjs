@@ -47,7 +47,7 @@ assert.match(game,/Open Settings → Touch Controls/,'instructions describe the 
 assert.doesNotMatch(game.slice(game.indexOf('function drawCanvasGuide'),game.indexOf('function drawCanvasScores')),/gameText\(12\)|number keys|Press '4'/,'guide no longer shows original handset keypad instructions');
 assert.doesNotMatch(game,/drawImageMap\(10,/,'striped ornament is never stretched as a selection highlight');
 assert.match(html,/src\/original-hud\.js\?v=62/);
-assert.match(html,/game\.js\?v=65/);
+assert.match(html,/game\.js\?v=66/);
 assert.match(sw,/CACHE_NAME\s*=\s*'bounce-tales-v62'/);
 assert.match(sw,/src\/original-hud\.js\?v=62/);
 for(let i=0;i<15;i++){

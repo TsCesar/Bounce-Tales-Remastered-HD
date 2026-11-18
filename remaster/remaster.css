@@ -1,4 +1,4 @@
-/* TsCesar UHD remaster — V62 layout overrides only. */
+/* Bounce Tales display layout. */
 html,body { background:radial-gradient(ellipse at 50% 16%,#1b344b 0%,#0b1827 48%,#070c13 100%) !important; }
 body { margin:0 !important; padding:0 !important; width:100vw !important; min-height:100dvh !important; overflow-x:hidden !important; }
 #app {
@@ -69,6 +69,8 @@ html[data-bounce-remaster="classic"] #game-wrap #game {image-rendering:pixelated
 #app .pause-mini {height:29px !important; width:29px !important; opacity:.78;}
 #app .keyboard-hint {display:none !important;}
 #app #game-controls {display:none !important;}
+#settings-game-pane {overflow-y:auto;overscroll-behavior:contain;}
+#settings-game-pane > * {flex-shrink:0;}
 #remaster-toolbar {
   position:fixed;
   z-index:25;
@@ -113,7 +115,7 @@ html[data-bounce-remaster="classic"] #game-wrap #game {image-rendering:pixelated
     transform-origin:center !important;
   }
   #app #game-controls .control:focus-visible {outline:2px solid #fff !important;}
-  /* Place quality/full-screen in the header centre, outside Pause hitbox. */
+  /* Keep fullscreen in the header centre, outside the Pause hitbox. */
   #remaster-toolbar {bottom:auto;top:max(7px,env(safe-area-inset-top));right:auto;left:50%;transform:translateX(-50%);opacity:.9;}
   #remaster-toolbar button {height:27px;min-width:34px;padding:4px 7px;font-size:9px;}
   #app .topbar {opacity:.92;}

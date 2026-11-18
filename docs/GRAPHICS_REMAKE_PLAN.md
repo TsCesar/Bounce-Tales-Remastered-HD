@@ -1,6 +1,6 @@
 # Historial del remake gráfico progresivo
 
-La edición publicada desde `main` dibuja los PNG originales directamente en Clásico, HD y Ultra. HD y Ultra aumentan la resolución del lienzo con múltiplos de 240 × 320 y suavizan solo las imágenes grandes que ocupan su PNG completo. Las posiciones, tamaños y secuencias de animación se comparten entre los tres modos.
+En la edición de `main`, abre el engranaje de Ajustes y elige **Gráficos → Clásico o HD**. Ambos modos dibujan los PNG originales. HD aumenta la resolución del lienzo en múltiplos de 240 × 320 y suaviza solo las imágenes grandes que ocupan su PNG completo. El navegador guarda la elección para la próxima partida.
 
 Se conserva **sin cambios** el libro V13 (portada, páginas y adornos). El remake es visual: todos los niveles RLEF originales, física, colisiones, enemigos y scripts de eventos se conservan. Las ramas de destino siguen separadas: \`main\` motor compartido, \`web\`, \`android\` e \`ios\`.
 

@@ -127,7 +127,7 @@ function imgFor(index){
 function drawOriginalCrop(target,image,sx,sy,width,height,x,y){
   // A complete large image can be filtered without sampling neighbouring atlas tiles.
   const quality=window.BounceRemaster?.quality;
-  const smooth=(quality==='hd'||quality==='ultra')&&width*height>=2400&&
+  const smooth=quality==='hd'&&width*height>=2400&&
     sx===0&&sy===0&&width===image.naturalWidth&&height===image.naturalHeight;
   if(smooth){
     target.save();
@@ -1453,6 +1453,7 @@ function bindInputs(){
   };
   addEventListener('keydown',e=>{
     if(!settingsLayer.hidden){if(e.key==='Escape')closeSettings();return;}
+    if(e.target?.id==='open-settings'&&(e.key==='Enter'||e.key===' '))return;
     if(editableTarget(e.target))return;
     const accepted=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter','Escape','Backspace','Shift','*','#','w','W','a','A','s','S','d','D','q','Q'];
     if(!accepted.includes(e.key))return;
@@ -1819,6 +1820,12 @@ function bindControlEditor(){
 }
 
 function bindSettings(){
+  const graphics=document.getElementById('graphics-quality');
+  const renderer=window.BounceRemaster;
+  if(graphics&&renderer){
+    graphics.value=renderer.quality;
+    graphics.addEventListener('change',()=>renderer.setQuality(graphics.value));
+  }
   const language=document.getElementById('language-choice');
   if(language){
     language.value=localStorage.getItem('bounce-language')||'auto';

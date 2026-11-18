@@ -5,6 +5,7 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 const base = process.env.BOUNCE_TEST_URL || 'http://127.0.0.1:8765/';
 const screenshots = path.resolve('artifacts/browser');
+const qualityKey = 'tscesar-bounce-remaster-quality-v1';
 const scenarios = [
   { name: 'desktop', viewport: { width: 1366, height: 768 }, dpr: 1, mobile: false },
   { name: 'retina-desktop', viewport: { width: 1920, height: 1080 }, dpr: 2, mobile: false },
@@ -41,7 +42,6 @@ async function compareFrames(page, allChapters) {
     await test.loadImages();
     const drawImage = CanvasRenderingContext2D.prototype.drawImage;
     const captures = {};
-    const qualities = ['classic', 'hd', 'ultra'];
     const trace = draw => {
       const placement = [];
       let smoothed = 0;
@@ -72,18 +72,12 @@ async function compareFrames(page, allChapters) {
       const placements = JSON.stringify(original.placement);
       const canvas = document.getElementById('game');
       if (keepImages) captures.classic = canvas.toDataURL('image/png');
-      let smoothed;
-      for (const quality of qualities.slice(1)) {
-        display.setQuality(quality);
-        const actual = trace(draw);
-        if (JSON.stringify(actual.placement) !== placements)
-          throw new Error(name + ' changed sprite sources, crops or positions in ' + quality);
-        if (smoothed !== undefined && actual.smoothed !== smoothed)
-          throw new Error(name + ' used different texture filtering in HD and Ultra');
-        smoothed = actual.smoothed;
-        if (keepImages) captures[quality] = canvas.toDataURL('image/png');
-      }
-      return smoothed;
+      display.setQuality('hd');
+      const hd = trace(draw);
+      if (JSON.stringify(hd.placement) !== placements)
+        throw new Error(name + ' changed sprite sources, crops or positions in HD');
+      if (keepImages) captures.hd = canvas.toDataURL('image/png');
+      return hd.smoothed;
     };
 
     const chapterCount = full ? 15 : 1;
@@ -125,6 +119,63 @@ async function compareFrames(page, allChapters) {
   }, allChapters);
 }
 
+async function expectDisplayMode(page, quality) {
+  await page.waitForFunction(mode => {
+    const canvas = document.getElementById('game');
+    return document.documentElement.dataset.bounceRemaster === mode &&
+      (mode === 'classic' ? canvas.width === 240 && canvas.height === 320 : canvas.width > 240);
+  }, quality);
+}
+
+async function checkGraphicsSettings(page, scenario) {
+  const gear = page.getByRole('button', { name: 'Settings', exact: true });
+  const dialog = page.getByRole('dialog', { name: 'Options' });
+  const select = dialog.getByRole('combobox', { name: 'Gráficos' });
+  const close = dialog.getByRole('button', { name: 'Close options' });
+  assert.equal(await dialog.isVisible(), false);
+  assert.equal(await page.locator('[data-hd-quality]').count(), 0);
+  if (scenario.mobile) await gear.tap();
+  else {
+    await gear.focus();
+    await page.keyboard.press('Space');
+  }
+  await select.waitFor();
+  assert.equal(await page.locator('#app').getAttribute('data-mode'), 'title');
+  assert.deepEqual(await select.locator('option').allTextContents(), ['Clásico', 'HD']);
+  assert.equal(await select.inputValue(), 'hd');
+  if (scenario.name === 'retina-desktop')
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), qualityKey), 'hd');
+  await page.screenshot({ path: path.join(screenshots, scenario.name + '-settings.png') });
+  if (scenario.mobile) await select.selectOption('classic');
+  else {
+    await select.focus();
+    await page.keyboard.press('Home');
+  }
+  await expectDisplayMode(page, 'classic');
+  if (scenario.name === 'touch-landscape') {
+    const editor = dialog.getByRole('button', { name: /Customize touch controls/ });
+    await editor.scrollIntoViewIfNeeded();
+    assert.ok(await editor.evaluate(button => {
+      const rect = button.getBoundingClientRect();
+      const pane = button.closest('[role="tabpanel"]').getBoundingClientRect();
+      return rect.top >= pane.top - 1 && rect.bottom <= pane.bottom + 1;
+    }), 'Lower game settings remain reachable on a short screen');
+  }
+  await close.click();
+  await page.keyboard.press('h');
+  await expectDisplayMode(page, 'classic');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.getElementById('statusline').textContent.includes('ORIGINAL LEVEL DATA LOADED'));
+  await expectDisplayMode(page, 'classic');
+  await gear.click();
+  assert.equal(await select.inputValue(), 'classic');
+  await select.selectOption('hd');
+  await expectDisplayMode(page, 'hd');
+  await close.click();
+  await page.keyboard.press('h');
+  await expectDisplayMode(page, 'hd');
+}
+
 async function checkScenario(browser, scenario) {
   const context = await browser.newContext({
     viewport: scenario.viewport, deviceScaleFactor: scenario.dpr,
@@ -142,6 +193,11 @@ async function checkScenario(browser, scenario) {
       missing.push(response.status() + ' ' + response.url());
   });
   try {
+    if (scenario.name === 'retina-desktop') {
+      await page.addInitScript(key => {
+        if (localStorage.getItem(key) === null) localStorage.setItem(key, 'ultra');
+      }, qualityKey);
+    }
     await exposeFrameChecks(page);
     const response = await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 25000 });
     assert.equal(response.status(), 200);
@@ -160,11 +216,7 @@ async function checkScenario(browser, scenario) {
     assert.equal(dimensions.scaleY, dimensions.scaleX);
     await page.screenshot({ path: path.join(screenshots, scenario.name + '-title.png') });
 
-    const button = page.locator('[data-hd-quality]');
-    for (const quality of scenario.mobile ? ['ULTRA', 'CLÁSICO', 'HD'] : ['CLÁSICO', 'HD', 'ULTRA']) {
-      await button.click();
-      assert.equal(await button.textContent(), quality);
-    }
+    await checkGraphicsSettings(page, scenario);
     const canvas = await page.locator('#game').boundingBox();
     assert.ok(canvas);
     const chooseAt = logicalY => {
@@ -175,6 +227,11 @@ async function checkScenario(browser, scenario) {
     await page.waitForFunction(() => ['select', 'play'].includes(document.getElementById('app')?.dataset.mode));
     if (await page.locator('#app').getAttribute('data-mode') === 'select') await chooseAt(277);
     await page.waitForFunction(() => document.getElementById('pause-mini')?.hidden === false);
+    await page.locator('#open-settings').click();
+    await page.locator('#graphics-quality').selectOption('classic');
+    await expectDisplayMode(page, 'classic');
+    await page.locator('#close-settings').click();
+    assert.equal(await page.locator('#app').getAttribute('data-mode'), 'play');
     const pause = page.locator('#pause-mini');
     const pauseBox = await pause.boundingBox();
     assert.ok(pauseBox && pauseBox.x >= 0 && pauseBox.y >= 0,
@@ -198,8 +255,8 @@ async function checkScenario(browser, scenario) {
     assert.deepEqual(missing, [], 'Missing resources');
     assert.deepEqual(generatedArt, [], 'The game loads its original PNGs directly');
     console.log(scenario.name + ': ' + chapterCount + ' chapters, 3 rotating forms and ' +
-      frameCount + ' original animation frames share the same texture crops in Classic, HD and Ultra. ' +
-      smoothedIds.length + ' of ' + spriteCount + ' source sprites are smoothed in HD and Ultra.');
+      frameCount + ' original animation frames share the same texture crops in Classic and HD. ' +
+      smoothedIds.length + ' of ' + spriteCount + ' source sprites are smoothed in HD. Settings selection and persistence passed.');
   } catch (error) {
     await page.screenshot({ path: path.join(screenshots, scenario.name + '-FAIL.png'), fullPage: true }).catch(() => {});
     throw new Error(scenario.name + ': ' + error.message + '\nJS errors: ' + errors.join(', ') + '\nMissing: ' + missing.join(', '));
