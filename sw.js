@@ -1,13 +1,13 @@
 /* V62: control-mode input lock + scored clock from m.java, stacked-CSS overrides pruned, original-game replay harness. */
-const CACHE_NAME = 'bounce-tales-v62' + '-direct-original-art';
+const CACHE_NAME = 'bounce-tales-v62' + '-graphics-settings-66';
 const APP_SHELL = [
   "./",
   "index.html",
   "style.css?v=62",
-  "remaster/remaster.css?v=12",
-  "remaster/remaster.js?v=15",
+  "remaster/remaster.css?v=13",
+  "remaster/remaster.js?v=16",
   "manifest.webmanifest",
-  "sw.js?v=65",
+  "sw.js?v=66",
   "src/image-map.json",
   "src/sprite-atlas.json",
   "assets/original/lang.xx",
@@ -51,7 +51,7 @@ const APP_SHELL = [
   "src/original-hud.js?v=62",
   "src/module-registry.js?v=62",
   "src/port-engine.js?v=62",
-  "game.js?v=65"
+  "game.js?v=66"
 ];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {

@@ -29,7 +29,7 @@
 <meta name="twitter:image" content="https://prasannaone.github.io/BounceTales/bounce-tales-web-preview.png">
 <title>Bounce Tales</title>
 <link rel="stylesheet" href="style.css?v=62">
-<link rel="stylesheet" href="remaster/remaster.css?v=12">
+<link rel="stylesheet" href="remaster/remaster.css?v=13">
 </head>
 <body>
 <main id="app">
@@ -135,6 +135,13 @@
       <button type="button" class="settings-tab" id="settings-about-tab" role="tab" aria-selected="false" aria-controls="settings-about-pane" data-settings-tab="about">ABOUT</button>
     </div>
     <section class="settings-pane" id="settings-game-pane" role="tabpanel" aria-labelledby="settings-game-tab">
+      <div class="setting-row compact" lang="es">
+        <label for="graphics-quality"><strong>Gráficos</strong></label>
+        <select id="graphics-quality">
+          <option value="classic">Clásico</option>
+          <option value="hd" selected>HD</option>
+        </select>
+      </div>
       <label class="setting-row compact" for="language-choice"><span><strong>Game language</strong><small>Original JAR translations. Auto follows your device language when available.</small></span>
         <select id="language-choice"><option value="auto">Device language</option><option value="xx">English</option><option value="bs-BA">Bosnian</option><option value="cs-CZ">Czech</option><option value="de">German</option><option value="hr-HR">Croatian</option><option value="hu-HU">Hungarian</option><option value="mk-MK">Macedonian</option><option value="sk-SK">Slovak</option><option value="sl-SI">Slovenian</option><option value="sq">Albanian</option><option value="sr-YU">Serbian</option></select>
       </label>
@@ -218,13 +225,13 @@
 <script src="src/original-hud.js?v=62"></script>
 <script src="src/module-registry.js?v=62"></script>
 <script src="src/port-engine.js?v=62"></script>
-<script src="remaster/remaster.js?v=15"></script>
-<script src="game.js?v=65"></script>
+<script src="remaster/remaster.js?v=16"></script>
+<script src="game.js?v=66"></script>
 <script>
 // Native apps bundle all game assets. Avoid service-worker conflicts with
 // WKWebView and Android WebView's local Capacitor protocol.
 if (!window.Capacitor?.isNativePlatform?.() && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=65',{updateViaCache:'none'}).catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=66',{updateViaCache:'none'}).catch(() => {}));
 }
 </script>
 </body>

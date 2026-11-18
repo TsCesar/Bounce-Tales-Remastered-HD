@@ -5,14 +5,16 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-function fixture(mobile){
+const qualityKey='tscesar-bounce-remaster-quality-v1';
+function fixture(mobile,previous=null){
   const requests=[],images=[],listeners=new Map();
   class FakeImage{
     constructor(){this.complete=false;this.naturalWidth=0;images.push(this);}
     set src(url){this._src=url;requests.push(url);}
     get src(){return this._src;}
   }
-  const localStorage={getItem:()=>null,setItem:()=>{}};
+  const preferences=new Map([[qualityKey,previous]]);
+  const localStorage={getItem:key=>preferences.get(key)??null,setItem:(key,value)=>preferences.set(key,value)};
   const doc={readyState:'loading',documentElement:{dataset:{}},
     addEventListener(n,fn){listeners.set(n,fn);}};
   const context={document:doc,localStorage,console,Image:FakeImage,
@@ -28,13 +30,14 @@ function fakeRect(width,height){
   return {width,height,left:0,top:0};
 }
 function ensureBounded(mobile){
-  const box=fixture(mobile);
+  const box=fixture(mobile,'ultra');
   box.run('remaster/remaster.js');
   const api=box.context.BounceRemaster;
+  assert.equal(api.quality,'hd');
+  assert.equal(box.context.localStorage.getItem(qualityKey),'hd','Retired preferences migrate to HD');
   const width=mobile?430:1920,height=mobile?573:2560;
   const canvas={width:240,height:320,getBoundingClientRect:()=>fakeRect(width,height)};
   const ctx={imageSmoothingEnabled:false,setTransform(){}};
-  api.setQuality('ultra');
   api.beginFrame(ctx,canvas);
   const budget=mobile?1300000:3200000;
   assert.ok(canvas.width*canvas.height<=budget+4000,
@@ -45,13 +48,20 @@ function ensureBounded(mobile){
   assert.equal(canvas.width/240,canvas.height/320);
   canvas.getBoundingClientRect=()=>fakeRect(360,480);
   box.context.devicePixelRatio=1;
-  api.setQuality('hd');api.beginFrame(ctx,canvas);
-  const hdWidth=canvas.width;
-  api.setQuality('ultra');api.beginFrame(ctx,canvas);
-  assert.ok(canvas.width>hdWidth,'Ultra samples more pixels on a standard screen');
+  let clock=1000;
+  box.context.performance.now=()=>clock;
+  for(let frame=0;frame<150;frame++){
+    clock+=50;
+    api.beginFrame(ctx,canvas);
+  }
+  assert.equal(api.quality,'hd','Slow presentation frames must respect the selected mode');
+  assert.equal(canvas.width,480,'HD keeps its integer scaling on a standard screen');
   api.setQuality('classic');api.beginFrame(ctx,canvas);
   assert.equal(canvas.width,240);
   assert.equal(canvas.height,320);
+  api.setQuality('ultra');
+  assert.equal(api.quality,'classic','The retired mode cannot be selected');
+  assert.equal(box.context.localStorage.getItem(qualityKey),'classic');
   return box;
 }
 async function checkTextures(mobile){
