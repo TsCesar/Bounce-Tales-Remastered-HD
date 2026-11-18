@@ -24,18 +24,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Instalar Playwright Chromium y generadores
+      - name: Instalar Playwright Chromium
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
-          python -m pip install --disable-pip-version-check pillow
       - name: Generar recursos para navegador
         run: |
           node tools/build_mobile_web.cjs
-          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
-          python tools/validate_hd_textures.py --output public/remaster/assets/hd
-          python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
-          python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
           node tools/verify_mobile_bundle.cjs
       - name: Probar Chromium desktop y móvil contra la web compilada
         shell: bash

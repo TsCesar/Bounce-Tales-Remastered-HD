@@ -9,8 +9,6 @@ on:
       - 'package.json'
       - 'tools/build_mobile_web.cjs'
       - 'tools/verify_mobile_bundle.cjs'
-      - 'tools/build_hd_textures.py'
-      - 'tools/validate_hd_textures.py'
       - 'remaster/**'
       - 'src/**'
       - 'assets/**'
@@ -44,17 +42,9 @@ jobs:
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Instalar herramientas de Capacitor
         run: npm install --no-audit --no-fund
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Construir web local con atlas originales ampliados
+      - name: Construir web local con los recursos originales
         run: |
-          python -m pip install --disable-pip-version-check pillow
           node tools/build_mobile_web.cjs
-          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
-          python tools/validate_hd_textures.py --output public/remaster/assets/hd
-          python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
-          python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
           node tools/verify_mobile_bundle.cjs
       - name: Generar proyecto Android nativo
         run: |
@@ -94,17 +84,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Instalar Capacitor y recursos locales
         run: |
           npm install --no-audit --no-fund
-          python -m pip install --disable-pip-version-check pillow
           node tools/build_mobile_web.cjs
-          python tools/build_hd_textures.py --output public/remaster/assets/hd --scale 4
-          python tools/build_hd_textures.py --output public/remaster/assets/mobile --scale 2
-          python tools/validate_hd_textures.py --output public/remaster/assets/mobile --scale 2
           node tools/verify_mobile_bundle.cjs
       - name: Generar proyecto de Xcode
         run: |

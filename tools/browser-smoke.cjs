@@ -44,14 +44,16 @@ async function compareFrames(page, allChapters) {
     const qualities = ['classic', 'hd', 'ultra'];
     const trace = draw => {
       const placement = [];
-      let enhanced = 0;
+      let smoothed = 0;
       CanvasRenderingContext2D.prototype.drawImage = function (image, ...coords) {
         if (coords.length === 8 && image instanceof HTMLImageElement) {
           const { a, b, c, d, e, f } = this.getTransform();
           const sx = this.canvas.width / 240, sy = this.canvas.height / 320;
           const matrix = [a / sx, b / sy, c / sx, d / sy, e / sx, f / sy];
-          placement.push([...coords.slice(4), ...matrix.map(value => Math.round(value * 1e5) / 1e5)]);
-          if (image.src.includes('/remaster/assets/')) enhanced++;
+          const source = new URL(image.src).pathname;
+          if (!source.includes('/assets/original/')) throw new Error('Unexpected sprite source ' + source);
+          placement.push([source, ...coords, ...matrix.map(value => Math.round(value * 1e5) / 1e5)]);
+          if (this.imageSmoothingEnabled) smoothed++;
         }
         return drawImage.call(this, image, ...coords);
       };
@@ -60,25 +62,28 @@ async function compareFrames(page, allChapters) {
       } finally {
         CanvasRenderingContext2D.prototype.drawImage = drawImage;
       }
-      return { placement, enhanced };
+      return { placement, smoothed };
     };
     const compare = (name, draw, keepImages = false) => {
       display.setQuality('classic');
       const original = trace(draw);
-      if (!original.placement.length || original.enhanced)
-        throw new Error(name + ' did not use the original images in Classic');
+      if (!original.placement.length || original.smoothed)
+        throw new Error(name + ' must keep the original image sharp in Classic');
       const placements = JSON.stringify(original.placement);
       const canvas = document.getElementById('game');
       if (keepImages) captures.classic = canvas.toDataURL('image/png');
+      let smoothed;
       for (const quality of qualities.slice(1)) {
         display.setQuality(quality);
         const actual = trace(draw);
         if (JSON.stringify(actual.placement) !== placements)
-          throw new Error(name + ' changed sprite positions or draw order in ' + quality);
-        if (actual.enhanced !== actual.placement.length)
-          throw new Error(name + ' missed an original atlas sprite in ' + quality);
+          throw new Error(name + ' changed sprite sources, crops or positions in ' + quality);
+        if (smoothed !== undefined && actual.smoothed !== smoothed)
+          throw new Error(name + ' used different texture filtering in HD and Ultra');
+        smoothed = actual.smoothed;
         if (keepImages) captures[quality] = canvas.toDataURL('image/png');
       }
+      return smoothed;
     };
 
     const chapterCount = full ? 15 : 1;
@@ -99,8 +104,16 @@ async function compareFrames(page, allChapters) {
     offscreen.width = 240;
     offscreen.height = 320;
     const ctx = offscreen.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    let spriteCount = 0;
+    const smoothedIds = [];
     let frameCount = 0;
     for (const [id, animation] of Object.entries(imageMap.maps)) {
+      if (animation.type === 'simple') {
+        if (compare('Original sprite ' + id, () => test.drawImageMap(Number(id), 120, 160, new Set(), 0, ctx)))
+          smoothedIds.push(Number(id));
+        spriteCount++;
+      }
       if (animation.type !== 'animated') continue;
       for (let frame = 0; frame < animation.frames.length; frame++) {
         compare('Animation ' + id + ' frame ' + frame,
@@ -108,7 +121,7 @@ async function compareFrames(page, allChapters) {
         frameCount++;
       }
     }
-    return { chapterCount, frameCount, captures };
+    return { chapterCount, frameCount, spriteCount, smoothedIds, captures };
   }, allChapters);
 }
 
@@ -119,8 +132,11 @@ async function checkScenario(browser, scenario) {
     locale: 'es-ES', serviceWorkers: 'block'
   });
   const page = await context.newPage();
-  const errors = [], missing = [];
+  const errors = [], missing = [], generatedArt = [];
   page.on('pageerror', error => errors.push(String(error)));
+  page.on('request', request => {
+    if (request.url().includes('/remaster/assets/')) generatedArt.push(request.url());
+  });
   page.on('response', response => {
     if (response.status() >= 400 && response.url().startsWith(base))
       missing.push(response.status() + ' ' + response.url());
@@ -130,18 +146,18 @@ async function checkScenario(browser, scenario) {
     const response = await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 25000 });
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => document.getElementById('statusline')?.textContent?.includes('ORIGINAL LEVEL DATA LOADED'));
-    await page.waitForFunction(() => window.BounceRemaster?.textureStatus?.().state === 'ready');
+    await page.waitForFunction(() => document.getElementById('game')?.width > 240);
     const dimensions = await page.evaluate(() => {
       const game = document.getElementById('game'), text = document.getElementById('game-text');
       const box = game.getBoundingClientRect();
       return { width: box.width, height: box.height, gamePixels: game.width * game.height,
-        textPixels: text.width * text.height, textures: window.BounceRemaster.textureStatus() };
+        scaleX: game.width / 240, scaleY: game.height / 320, textPixels: text.width * text.height };
     });
     const budget = scenario.mobile ? 1300000 : 3200000;
     assert.ok(dimensions.gamePixels <= budget + 4000 && dimensions.textPixels <= budget + 4000);
     assert.ok(dimensions.width > 150 && dimensions.height > 180);
-    assert.equal(dimensions.textures.spriteCount, 348);
-    assert.equal(dimensions.textures.atlasScale, scenario.mobile ? 2 : 4);
+    assert.ok(Number.isInteger(dimensions.scaleX) && dimensions.scaleX > 1);
+    assert.equal(dimensions.scaleY, dimensions.scaleX);
     await page.screenshot({ path: path.join(screenshots, scenario.name + '-title.png') });
 
     const button = page.locator('[data-hd-quality]');
@@ -171,15 +187,19 @@ async function checkScenario(browser, scenario) {
     await page.waitForFunction(() => document.getElementById('pause-mini')?.hidden === true);
     await page.screenshot({ path: path.join(screenshots, scenario.name + '-pause.png') });
 
-    const { chapterCount, frameCount, captures } = await compareFrames(page, scenario.name === 'desktop');
+    const { chapterCount, frameCount, spriteCount, smoothedIds, captures } = await compareFrames(page, scenario.name === 'desktop');
+    assert.equal(spriteCount, 348);
+    assert.deepEqual(smoothedIds.sort((a, b) => a - b), [1, 48, 84, 138, 144, 345, 350, 351]);
     for (const [quality, url] of Object.entries(captures)) {
       fs.writeFileSync(path.join(screenshots, scenario.name + '-' + quality + '.png'),
         Buffer.from(url.split(',')[1], 'base64'));
     }
     assert.deepEqual(errors, [], 'Uncaught browser errors');
     assert.deepEqual(missing, [], 'Missing resources');
+    assert.deepEqual(generatedArt, [], 'The game loads its original PNGs directly');
     console.log(scenario.name + ': ' + chapterCount + ' chapters, 3 rotating forms and ' +
-      frameCount + ' original animation frames aligned in Classic, HD and Ultra.');
+      frameCount + ' original animation frames share the same texture crops in Classic, HD and Ultra. ' +
+      smoothedIds.length + ' of ' + spriteCount + ' source sprites are smoothed in HD and Ultra.');
   } catch (error) {
     await page.screenshot({ path: path.join(screenshots, scenario.name + '-FAIL.png'), fullPage: true }).catch(() => {});
     throw new Error(scenario.name + ': ' + error.message + '\nJS errors: ' + errors.join(', ') + '\nMissing: ' + missing.join(', '));

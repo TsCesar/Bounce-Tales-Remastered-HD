@@ -15,13 +15,14 @@
   const MAX_PIXELS = 2800;
   let lastMeasuredFrame=0,slowFrames=0;
   function renderingScale(cssW,cssH){
-    // Maintain aspect ratio and limit both texture dimensions and pixel area.
-    // These budgets are intentionally conservative for GPU-less WebViews.
+    // Use whole logical pixels on the backing canvas within the device budget.
     const budget=coarse?1300000:3200000;
     const deviceDpr=Math.max(1,Math.min(coarse?2:2.25,window.devicePixelRatio||1));
     const requested=quality==='ultra'?Math.max(1.5,deviceDpr):Math.min(deviceDpr,1.5);
-    return Math.min(requested,MAX_PIXELS/Math.max(cssW,cssH),
-      Math.sqrt(budget/Math.max(1,cssW*cssH)));
+    const displayScale=Math.max(cssW/WORLD_W,cssH/WORLD_H);
+    const limit=Math.floor(Math.min(MAX_PIXELS/Math.max(WORLD_W,WORLD_H),
+      Math.sqrt(budget/(WORLD_W*WORLD_H))));
+    return Math.min(limit,Math.max(quality==='ultra'?3:2,Math.ceil(displayScale*requested)));
   }
   function trackFrames(){
     if(typeof performance==='undefined'||typeof performance.now!=='function'||quality==='classic')return;
@@ -70,17 +71,13 @@
     const cssW = rect.width || WORLD_W, cssH = rect.height || WORLD_H;
     trackFrames();
     const scale=renderingScale(cssW,cssH);
-    // Constrain by total pixels, not just width/height separately; use the
-    // same scale on both axes to preserve camera/UI proportions.
-    const targetW = Math.max(WORLD_W, Math.round(cssW * scale));
-    const targetH = Math.max(WORLD_H, Math.round(cssH * scale));
+    const targetW = WORLD_W * scale;
+    const targetH = WORLD_H * scale;
     if (canvas.width !== targetW || canvas.height !== targetH) {
       canvas.width = targetW;
       canvas.height = targetH;
     }
-    ctx.setTransform(canvas.width / WORLD_W, 0, 0, canvas.height / WORLD_H, 0, 0);
-    // Preserve pixel-accurate originals. Individual HD sprites may override
-    // sampling locally; menus and text never inherit a global blur.
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'low';
   }
